@@ -3,25 +3,36 @@ package automata;
 public class Testing {
 
 	public static void main(String[] args) {
+		
+		// make states
+		State s0 = new State();
+		State s1 = new State(true);    // accept state
+		s0.addTransition('a', s0);
+		s0.addTransition('b', s1);
+		s1.addTransition('a', s0);
+		//System.out.println(s0);
+		//System.out.println(s1);
+		
+		// make FA
 		Automaton f = new Automaton();
+		f.addState(s0, true);          // start state
+		s0.setName("Start");
+		f.addState(s1);
+		//System.out.println("\n" + f);
 		
-		State s1 = new State();
-		State s2 = new State(true);  // accept state
-		s1.addTransition('a', s2);
-		s2.addTransition('b', s1);
+		// run FA
+		//System.out.println(f.run("aba") ? "Accepted!" : "Rejected.");
+		//f.reset();
 		
-		f.addState(s1, true);  // start state
-		f.addState(s2);
-		if (f.run("aba"))
-			System.out.println("Accepted!");
-		else
-			System.out.println("Rejected.");
-		
-		f.reset();
+		// step through FA
+		f.setInput("aba");
+		System.out.println("\n" + f.snapshot());
 		f.step();
+		System.out.println("\n" + f.snapshot());
 		f.step();
+		System.out.println("\n" + f.snapshot());
 		f.step();
-		if (f.accepted())
-			System.out.println("Accepted!");
+		System.out.println("\n" + f.snapshot());
+		System.out.println(f.accepted() ? "Accepted!" : "Rejected.");
 	}
 }

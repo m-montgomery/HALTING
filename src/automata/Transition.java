@@ -8,9 +8,15 @@ public class Transition {    // MM: using class instead of simple pair struct
 		input = i;
 		next = n;
 	}
+	
+	public String toString() {
+		return "'" + input + "'" + " -> " + next.getPrintName();
+	}
+	
 	public Character getInput() {
 		return input;
 	}
+	
 	public State getNext() {
 		return next;
 	}
