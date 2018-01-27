@@ -1,6 +1,6 @@
 package automata;
 
-public class Testing {
+public class AutomataTest {
 
 	public static void main(String[] args) {
 		
