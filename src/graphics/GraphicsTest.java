@@ -28,8 +28,6 @@ public class GraphicsTest {
 			public void run() {
 				try {
 					MainWindow frame = new MainWindow();
-					frame.setVisible(true);
-					System.out.println("adding automaton to frame");  // debug
 					frame.addAutomaton(f);
 					frame.update();
 				} 

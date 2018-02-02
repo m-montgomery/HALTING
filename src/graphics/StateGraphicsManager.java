@@ -7,12 +7,15 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import javax.swing.JPanel;
 
+import automata.Automaton;
 import automata.State;
 
 public class StateGraphicsManager extends JPanel {
 
 	private static final long serialVersionUID = 5205922192600518812L;
 	private ArrayList<StateGraphic> stateGraphics;
+	private Automaton machine = null;
+	private StateGraphic currentState = null;
 
 	public StateGraphicsManager() {
 		stateGraphics = new ArrayList<StateGraphic>();
@@ -34,14 +37,39 @@ public class StateGraphicsManager extends JPanel {
 
 	}
 	
+	private void addState(State s, int x, int y) {
+		StateGraphic state = new StateGraphic(s);
+		state.setLocation(x, y);
+		stateGraphics.add(state);
+	}
+	
 	@Override
 	protected void paintComponent(Graphics g) {
-		GraphicsTest.debug("In StateGraphicsManager paintComponent()");
+		//GraphicsTest.debug("In StateGraphicsManager paintComponent()");
 		super.paintComponent(g);
 		
-		// for each state
+		// draw each state
 		for (StateGraphic s : stateGraphics) {
-			GraphicsTest.debug("Painting state " + s.getName());
+			//GraphicsTest.debug("Painting state " + s.getName());
+			
+			// update selected state
+			if (machine.getCurrentState() == s.getState() && 
+					machine.getStatus() != Automaton.READY) {    // if running
+				
+				if (currentState != null) {                // deselect previous
+					currentState.deselect();
+					//GraphicsTest.debug("Deselecting " + currentState.getName());
+				}
+				currentState = s; 
+				
+				if (machine.getStatus() == Automaton.ACCEPT)
+					currentState.accept();
+				else if (machine.getStatus() == Automaton.REJECT)
+					currentState.reject();
+				else
+					currentState.select();
+				//GraphicsTest.debug("Selecting " + currentState.getName());
+			}
 			
 			// calculate bounding rectangle upperleft coords
 			int rectX = s.x - s.diameter/2;    // s.x, s.y are center coords
@@ -64,7 +92,34 @@ public class StateGraphicsManager extends JPanel {
 		GraphicsTest.debug("");  // newline
 	}
 
-	
+	public StateGraphic withinStateBounds(Point point) {
+		
+		double x = point.getX();
+		double y = point.getY();
+		GraphicsTest.debug("Checking if " + x + "," + y + " is inside a state");
+		
+		// if point is within a state's circle, return the state
+		for (StateGraphic state : stateGraphics) {
+			// calculation to determine if point is inside circle:
+			// (point x - state x)^2 + (point y - state y)^2 < (state radius)^2 
+			
+			double radiusSq = Math.pow(state.diameter / 2, 2);
+			if (Math.pow((x-state.x), 2) + Math.pow((y-state.y), 2) < radiusSq)
+				return state;
+		}
+		return null;
+	}
+
+	public void addAutomaton(Automaton auto) {
+		machine = auto;
+	}
+
+	public void clearStates() {
+		for (StateGraphic state : stateGraphics)
+			state.deselect();
+		currentState = null;
+	}
+
 	class MouseListener extends MouseAdapter {
 		
 		private Point startingPoint;         // track previous mouse location
@@ -105,40 +160,35 @@ public class StateGraphicsManager extends JPanel {
 				repaint();
 			}
 		}
-		
+
 		public void mouseReleased(MouseEvent me) {
 			GraphicsTest.debug("Mouse released!");
-			
-			// if have selected state and didn't click inside another state
-			if (selectedState != null && withinStateBounds(me.getPoint()) == null) { 
-				GraphicsTest.debug("Moving state " + selectedState.getName() + 
-						" to " + me.getX() + "," + me.getY());
+
+			// if didn't click inside another state
+			if (withinStateBounds(me.getPoint()) == null) { 
+
+				// if have a selected state, relocate
+				if (selectedState != null) {
+					GraphicsTest.debug("Moving state " + selectedState.getName() + 
+							" to " + me.getX() + "," + me.getY());
+
+					// relocate selected state and deselect it
+					selectedState.setLocation(me.getX(), me.getY());
+					selectedState.deselect();
+					selectedState = null;
+				}
+
+				// if no selected state, make new state 
+				else {
+					State s = new State();
+					machine.addState(s);
+					addState(s, me.getX(), me.getY());
+				}
 				
-				// relocate selected state and deselect it
-				selectedState.setLocation(me.getX(), me.getY());
-				selectedState.deselect();
-				selectedState = null;
+				// refresh display
 				repaint();
 			}
 		}
-	}
-
-	public StateGraphic withinStateBounds(Point point) {
-		
-		double x = point.getX();
-		double y = point.getY();
-		GraphicsTest.debug("Checking if " + x + "," + y + " is inside a state");
-		
-		// if point is within a state's circle, return the state
-		for (StateGraphic state : stateGraphics) {
-			// calculation to determine if point is inside circle:
-			// (point x - state x)^2 + (point y - state y)^2 < (state radius)^2 
-			
-			double radiusSq = Math.pow(state.diameter / 2, 2);
-			if (Math.pow((x-state.x), 2) + Math.pow((y-state.y), 2) < radiusSq)
-				return state;
-		}
-		return null;
 	}
 }
 

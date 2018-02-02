@@ -8,18 +8,22 @@ import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
 import automata.Automaton;
+import automata.State;
 
 import java.awt.GridLayout;
 import javax.swing.JLabel;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
 
 import javax.swing.JSplitPane;
+import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JTextArea;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JMenu;
 
 public class MainWindow extends JFrame {
 
@@ -29,19 +33,20 @@ public class MainWindow extends JFrame {
 	private Automaton machine;                    // the automaton
 	private StateGraphicsManager graphicManager;  // the graphical manager
 	
+	private JLabel lblType;
+	private String machineType = "DFA";
+	private JLabel lblStatus;
+	private String appStatus = "ready";
+	
+	private JTextArea inputText;
+	
 	public MainWindow() {
 		setTitle("HALTING");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 750, 400);
+		setVisible(true);
 		
-		// MENU BAR
-		JMenuBar menuBar = new JMenuBar();
-		setJMenuBar(menuBar);                             // MM: to do: align items left
-		JMenuItem menuItemFile = new JMenuItem("File");   // MM: to do: add click actions
-		menuBar.add(menuItemFile);
-		JMenuItem menuItemEdit = new JMenuItem("Edit");   // MM: to do: add click actions
-		menuBar.add(menuItemEdit);
-		
+		initMenuBar();
 		
 		// CONTENT CONTAINERS
 		contentPane = new JPanel();
@@ -62,7 +67,15 @@ public class MainWindow extends JFrame {
 		sidebar.setLayout(gbl_sidebar);
 
 		// run button
-		JButton btnRun = new JButton("Run");   // MM: to do: add click actions
+		JButton btnRun = new JButton(new AbstractAction("Run") {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				graphicManager.clearStates();
+				machine.run(inputText.getText());
+				update();  // update states and status
+			}
+		});
+		
 		GridBagConstraints gbc_btnRun = new GridBagConstraints();
 		gbc_btnRun.insets = new Insets(5, 5, 5, 5);
 		gbc_btnRun.anchor = GridBagConstraints.CENTER;
@@ -71,7 +84,14 @@ public class MainWindow extends JFrame {
 		sidebar.add(btnRun, gbc_btnRun);
 		
 		// reset button
-		JButton btnReset = new JButton("Reset");   // MM: to do: add click actions
+		JButton btnReset = new JButton(new AbstractAction("Reset") {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				machine.reset();
+				graphicManager.clearStates();
+				update();  // update states and status
+			}
+		});
 		GridBagConstraints gbc_btnReset = new GridBagConstraints();
 		gbc_btnReset.insets = new Insets(5, 5, 5, 5);
 		gbc_btnReset.anchor = GridBagConstraints.CENTER;
@@ -80,7 +100,13 @@ public class MainWindow extends JFrame {
 		sidebar.add(btnReset, gbc_btnReset);
 		
 		// step back
-		JButton btnStepBack = new JButton("<-- Step");   // MM: to do: add click actions
+		JButton btnStepBack = new JButton(new AbstractAction("<-- Step") {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				machine.stepBack();
+				update();  // update states and status
+			}
+		});
 		GridBagConstraints gbc_btnStepBack = new GridBagConstraints();
 		gbc_btnStepBack.insets = new Insets(5, 5, 5, 5);
 		gbc_btnStepBack.anchor = GridBagConstraints.CENTER;
@@ -89,14 +115,20 @@ public class MainWindow extends JFrame {
 		sidebar.add(btnStepBack, gbc_btnStepBack);
 		
 		// step forward
-		JButton btnStepForward = new JButton("Step -->");   // MM: to do: add click actions
+		JButton btnStepForward = new JButton(new AbstractAction("Step -->") {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				machine.step();
+				update();  // update states and status
+			}
+		});
 		GridBagConstraints gbc_btnStepForward = new GridBagConstraints();
 		gbc_btnStepForward.insets = new Insets(5, 5, 5, 5);
 		gbc_btnStepForward.anchor = GridBagConstraints.CENTER;
 		gbc_btnStepForward.gridx = 1;
 		gbc_btnStepForward.gridy = 1;
 		sidebar.add(btnStepForward, gbc_btnStepForward);
-				
+		
 		// input label
 		JLabel lblInput = new JLabel("Input");
 		GridBagConstraints gbc_lblInput = new GridBagConstraints();
@@ -108,7 +140,7 @@ public class MainWindow extends JFrame {
 		sidebar.add(lblInput, gbc_lblInput);
 
 		// input text field
-		JTextArea inputText = new JTextArea();   // MM: to do: add buttons to clear & set
+		inputText = new JTextArea();
 		inputText.setFont(new Font("Monospaced", Font.PLAIN, 14));
 		inputText.setLineWrap(true);
 		JScrollPane areaScrollPane = new JScrollPane(inputText);  // make input field scrollable
@@ -122,7 +154,7 @@ public class MainWindow extends JFrame {
 		sidebar.add(areaScrollPane, gbc_inputText);
 
 		// status
-		JLabel lblStatus = new JLabel("Status: Ready");  // default status // MM: will need to change to currentStatus variable
+		lblStatus = new JLabel("Status: " + appStatus); // default: ready
 		GridBagConstraints gbc_lblStatus = new GridBagConstraints();
 		gbc_lblStatus.insets = new Insets(5, 5, 5, 5);
 		gbc_lblStatus.gridx = 0;
@@ -131,7 +163,7 @@ public class MainWindow extends JFrame {
 		sidebar.add(lblStatus, gbc_lblStatus);
 		
 		// type
-		JLabel lblType = new JLabel("Type: DFA");  // default type // MM: will need to change to defaultType variable
+		lblType = new JLabel("Type: " + machineType);   // default: DFA
 		GridBagConstraints gbc_lblType = new GridBagConstraints();
 		gbc_lblType.insets = new Insets(5, 5, 5, 5);
 		gbc_lblType.gridx = 0;
@@ -141,24 +173,80 @@ public class MainWindow extends JFrame {
 		
 		
 		// MAIN DISPLAY 
-		machine = null;
 		graphicManager = new StateGraphicsManager();
 		JScrollPane rightComponent = new JScrollPane(graphicManager);
 		splitPane.setRightComponent(rightComponent);
+		
+		
+		// init default machine
+		addAutomaton(new Automaton());
+	}
+
+	private void initMenuBar() {
+		
+		// Menu Bar
+		JMenuBar menuBar = new JMenuBar();
+		setJMenuBar(menuBar);
+		JMenu menuFile = new JMenu("File");
+		menuBar.add(menuFile);
+		JMenu menuEdit = new JMenu("Edit");
+		menuBar.add(menuEdit);
+		
+		// File
+		JMenuItem menuItemNew = new JMenuItem(new AbstractAction("New") {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				MainWindow newFrame = new MainWindow();
+				newFrame.setVisible(true);
+			}			
+		});
+		menuFile.add(menuItemNew);
+		// MM: to do: add click actions
+		JMenuItem menuItemOpen = new JMenuItem("Open");
+		menuFile.add(menuItemOpen);
+		// MM: to do: add click actions
+		JMenuItem menuItemSave = new JMenuItem("Save");
+		menuFile.add(menuItemSave);
+		// MM: to do: add click actions
+		JMenuItem menuItemHelp = new JMenuItem("Help");
+		menuFile.add(menuItemHelp);
+		// MM: to do: add click actions
+		JMenuItem menuItemExit = new JMenuItem("Exit");
+		menuFile.add(menuItemExit);
+		// MM: to do: add click actions
+		
+		// Edit
+		JMenuItem menuItemRefresh = new JMenuItem("Refresh");
+		menuEdit.add(menuItemRefresh);
+		// MM: to do: add click actions
+		JMenuItem menuItemChange = new JMenuItem("Change to...");
+		menuEdit.add(menuItemChange);
+		// MM: to do: add click actions
+
 	}
 	
-	public void addAutomaton(Automaton a) {
-		machine = a;
+	public void addAutomaton(Automaton auto) {
+		machine = auto;
+		graphicManager.addAutomaton(machine);
 		graphicManager.createStates(machine.getStates());
 	}
 	
 	public void update() {
+		// update state graphics
 		drawStates();
+		
+		// update labels
+		if (machine.getType() != machineType) {
+			machineType = machine.getType();
+			lblType.setText("Type: " + machineType);
+		}
+		if (machine.getStatus() != appStatus) {
+			appStatus = machine.getStatus();
+			lblStatus.setText("Status: " + appStatus);
+		}		
 	}
 	
 	private void drawStates() {
-		if (machine == null) 
-			addAutomaton(new Automaton());
 		graphicManager.repaint();
 	}
 }

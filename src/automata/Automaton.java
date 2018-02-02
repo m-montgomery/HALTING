@@ -9,10 +9,19 @@ public class Automaton {
 	State currentState;
 	
 	String name;
+	String type;
+	String status;
+	
 	ArrayList<Character> input;
 	int inputCount;
 	int stepCount;                // separate from input for future epsilon moves
 	static int automataCount = 0;
+	
+	public static final String READY = "Ready";
+	public static final String ACCEPT = "Accepted";
+	public static final String ERROR = "Error";
+	public static final String REJECT = "Rejected";
+	public static final String RUN = "Running";
 	
 	public static void debug(String s) {  // DEBUG
 		System.out.println(s);
@@ -26,7 +35,10 @@ public class Automaton {
 		input = new ArrayList<Character>();
 		inputCount = 0;
 		stepCount = 0;
+	
 		name = "Automaton " + Integer.toString(automataCount++);
+		type = "DFA";
+		status = READY;
 	}
 	
 	public String toString() {
@@ -76,9 +88,19 @@ public class Automaton {
 	public String getName() {
 		return name;
 	}
-	
 	public void setName(String newName) {
 		name = newName;
+	}
+	
+	public String getType() {
+		return type;
+	}
+	public void setType(String newType) {
+		type = newType;
+	}
+
+	public String getStatus() {
+		return status;
 	}
 	
 	public void addState(State s) {
@@ -100,16 +122,30 @@ public class Automaton {
 	}
 	
 	public boolean run(String inputString) {
+		reset();
+		setInput(inputString);
+		return run();
+	}
+	
+	public boolean run() {
 		
+		if (input.isEmpty()) {
+			debug("No input defined.");
+			status = ERROR;
+			return false;
+		}
 		if (startState == null) {
 			// throw NoStartStateDefined exception
 			debug("No start state defined.");
+			status = ERROR;
 			return false;
 		}
+
+		reset();
+		status = RUN;
 		
 		// build input list
-		int totalInput = inputString.length();
-		setInput(inputString);
+		int totalInput = input.size();
 		
 		// step through states based on input
 		while (inputCount < totalInput)
@@ -118,10 +154,13 @@ public class Automaton {
 		return accepted();
 	}
 	
-	void step() {
+	public void step() {
+		
 		// don't continue past input
 		if (inputCount >= input.size())   // MM: but what about epsilon moves after input?
 			return;
+		
+		status = RUN;
 		
 		stepCount++;
 		// find next state given current state & input
@@ -131,6 +170,7 @@ public class Automaton {
 		if (nextState == null) {
 			//throw noTransitionDefined exception
 			debug("No transition defined.");
+			status = ERROR;
 			return;
 		}
 		
@@ -138,12 +178,16 @@ public class Automaton {
 		history.add(nextState);  // add next state to history
 		currentState = nextState;
 		//debug("Adding state " + currentState.getPrintName() + " to history");
+		if (reachedEndOfInput())
+			status = accepted() ? ACCEPT : REJECT;
 	}
 	
-	void stepBack() {
+	public void stepBack() {
 		// don't step back if at beginning
 		if (inputCount == 0)
 			return;
+		
+		status = RUN;
 		
 		inputCount--;
 		stepCount--;
@@ -153,14 +197,26 @@ public class Automaton {
 	}
 	
 	public void reset() {
+		// reset runtime variables, keep original input
+		
 		inputCount = 0;
 		stepCount = 0;
 		history.clear();
 		history.add(startState);   // add start state to history
 		currentState = startState;
+		
+		status = READY;
 	}
 	
-	public boolean accepted() {
+	boolean reachedEndOfInput() {
+		return inputCount == input.size();
+	}
+	
+	boolean accepted() {
 		return currentState.isAccept();
+	}
+	
+	public State getCurrentState() {
+		return currentState;
 	}
 }
