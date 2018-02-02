@@ -69,6 +69,10 @@ public class Automaton {
 		return s;
 	}
 	
+	public ArrayList<State> getStates() {
+		return states;
+	}
+	
 	public String getName() {
 		return name;
 	}

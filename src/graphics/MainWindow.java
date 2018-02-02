@@ -1,48 +1,34 @@
 package graphics;
 
-import java.awt.Color;
-import java.awt.EventQueue;
 import java.awt.Font;
 
-import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+
+import automata.Automaton;
+
 import java.awt.GridLayout;
 import javax.swing.JLabel;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+
 import javax.swing.JSplitPane;
 import javax.swing.JButton;
-import javax.swing.JTextField;
 import javax.swing.JTextArea;
-import javax.swing.JToolBar;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
 public class MainWindow extends JFrame {
 
 	private static final long serialVersionUID = -7929001871259770152L;  // MM: auto-generated; necessary?
-	private JPanel contentPane;
-
-	// launch
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					MainWindow frame = new MainWindow();
-					frame.setVisible(true);
-				} 
-				catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-
+	
+	private JPanel contentPane;                   // entire window
+	private Automaton machine;                    // the automaton
+	private StateGraphicsManager graphicManager;  // the graphical manager
+	
 	public MainWindow() {
 		setTitle("HALTING");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -154,11 +140,25 @@ public class MainWindow extends JFrame {
 		sidebar.add(lblType, gbc_lblType);
 		
 		
-		
 		// MAIN DISPLAY 
-		JPanel mainPanel = new JPanel();
-		JScrollPane rightComponent = new JScrollPane(mainPanel);
+		machine = null;
+		graphicManager = new StateGraphicsManager();
+		JScrollPane rightComponent = new JScrollPane(graphicManager);
 		splitPane.setRightComponent(rightComponent);
-		
+	}
+	
+	public void addAutomaton(Automaton a) {
+		machine = a;
+		graphicManager.createStates(machine.getStates());
+	}
+	
+	public void update() {
+		drawStates();
+	}
+	
+	private void drawStates() {
+		if (machine == null) 
+			addAutomaton(new Automaton());
+		graphicManager.repaint();
 	}
 }
