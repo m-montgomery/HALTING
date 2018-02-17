@@ -2,6 +2,8 @@ package graphics;
 
 import java.awt.EventQueue;
 
+import javax.swing.JFrame;
+
 import automata.Automaton;
 import automata.State;
 
@@ -16,9 +18,9 @@ public class GraphicsTest {
 		// init test FA
 		State s0 = new State();
 		State s1 = new State(true);    // accept state
-		s0.addTransition('a', s0);
-		s0.addTransition('b', s1);
-		s1.addTransition('a', s0);
+		s0.addTransition("a", s0);
+		s0.addTransition("b", s1);
+		s1.addTransition("a", s0);
 		Automaton f = new Automaton();
 		f.addState(s0, true);          // start state
 		f.addState(s1);
@@ -27,6 +29,7 @@ public class GraphicsTest {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					JFrame.setDefaultLookAndFeelDecorated(true); // MM: TO DO: check on Windows & Mac
 					MainWindow frame = new MainWindow();
 					frame.addAutomaton(f);
 					frame.update();

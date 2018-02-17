@@ -7,9 +7,9 @@ public class AutomataTest {
 		// make states
 		State s0 = new State();
 		State s1 = new State(true);    // accept state
-		s0.addTransition('a', s0);
-		s0.addTransition('b', s1);
-		s1.addTransition('a', s0);
+		s0.addTransition("a", s0);
+		s0.addTransition("b", s1);
+		s1.addTransition("a", s0);
 		//System.out.println(s0);
 		//System.out.println(s1);
 		

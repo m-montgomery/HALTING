@@ -22,10 +22,6 @@ public class StateGraphic extends JComponent {
 	public static final Color selectedCircleColor = new Color(175, 200, 250); // blue
 	public static final Color rejectedCircleColor = new Color(255, 50, 50);   // red
 	public static final Color acceptedCircleColor = new Color(40, 255, 70);   // green
-//	private Color circleColor;
-//	private Color circleBorderColor;
-//	private Color selectedCircleColor;
-//	private Color selectedBorderColor;
 
 	public StateGraphic() {
 		state = new State();
@@ -42,11 +38,6 @@ public class StateGraphic extends JComponent {
 		borderWidth = 2;
 		selected = false;
 		currentColor = circleColor;
-		
-//		circleColor = new Color(255, 255, 255);          // white
-//		circleBorderColor = new Color(0, 0, 0);          // black border
-//		selectedCircleColor = new Color(175, 200, 250);  // pale blue
-//		selectedBorderColor = new Color(0, 0, 0);        // black border
 	}
 	
 	public void setLocation(int newX, int newY) {
@@ -75,6 +66,14 @@ public class StateGraphic extends JComponent {
 	
 	public State getState() {
 		return state;
+	}
+	
+	public int getX() {
+		return x;
+	}
+
+	public int getY() {
+		return y;
 	}
 	
 	public Color getBorderColor() {

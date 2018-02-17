@@ -1,6 +1,9 @@
 package automata;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+
+import graphics.GraphicsTest;
 
 public class Automaton {
 	ArrayList<State> states;
@@ -12,9 +15,11 @@ public class Automaton {
 	String type;
 	String status;
 	
-	ArrayList<Character> input;
+	ArrayList<String> input;
 	int inputCount;
 	int stepCount;                // separate from input for future epsilon moves
+	int stateCount;
+	
 	static int automataCount = 0;
 	
 	public static final String READY = "Ready";
@@ -30,11 +35,9 @@ public class Automaton {
 	public Automaton() {
 		states = new ArrayList<State>();
 		history = new ArrayList<State>();
-		startState = null;
-		currentState = null;
-		input = new ArrayList<Character>();
-		inputCount = 0;
-		stepCount = 0;
+		startState = currentState = null;
+		input = new ArrayList<String>();
+		inputCount = stepCount = stateCount = 0;
 	
 		name = "Automaton " + Integer.toString(automataCount++);
 		type = "DFA";
@@ -71,7 +74,7 @@ public class Automaton {
 		
 		// show input
 		s += "INPUT: ";
-		for (Character c : input)
+		for (String c : input)
 			s += c;
 		s += "\n";
 		for (int i = 0; i < inputCount + 7; i++)  // 6 for "INPUT: "
@@ -105,35 +108,32 @@ public class Automaton {
 	
 	public void addState(State s) {
 		states.add(s);
+		s.setName(s.getName() + Integer.toString(stateCount++));
 	}
 	
 	public void addState(State s, boolean start) {
-		states.add(s);
+		addState(s);
 		if (start) {
 			startState = s;
 			currentState = startState;
 			history.add(currentState);
+			s.setStart(true);
 		}
 	}
 	
 	public void setInput(String inputString) {
+		input.clear();
 		for (int i = 0; i < inputString.length(); i++)
-			input.add(inputString.charAt(i));
+			input.add(inputString.substring(i, i+1));
 	}
 	
 	public boolean run(String inputString) {
-		reset();
 		setInput(inputString);
 		return run();
 	}
 	
 	public boolean run() {
 		
-		if (input.isEmpty()) {
-			debug("No input defined.");
-			status = ERROR;
-			return false;
-		}
 		if (startState == null) {
 			// throw NoStartStateDefined exception
 			debug("No start state defined.");
@@ -164,12 +164,14 @@ public class Automaton {
 		
 		stepCount++;
 		// find next state given current state & input
-		char currentInput = input.get(inputCount++);
-		//debug("curr: " + currentInput);  // DEBUG
+		String currentInput = input.get(inputCount++);
+		debug("current input: " + currentInput);
+		debug("current state: " + currentState.toString());
 		State nextState = currentState.getNextState(currentInput);
 		if (nextState == null) {
 			//throw noTransitionDefined exception
-			debug("No transition defined.");
+			debug("No transition defined from " + currentState.getName() +
+					" on input " + currentInput);
 			status = ERROR;
 			return;
 		}
@@ -198,12 +200,12 @@ public class Automaton {
 	
 	public void reset() {
 		// reset runtime variables, keep original input
-		
 		inputCount = 0;
 		stepCount = 0;
 		history.clear();
 		history.add(startState);   // add start state to history
 		currentState = startState;
+		//debug("Reset. Start/current state: " + currentState.getName());
 		
 		status = READY;
 	}
@@ -218,5 +220,54 @@ public class Automaton {
 	
 	public State getCurrentState() {
 		return currentState;
+	}
+
+	public void setStart(State state) {
+		
+		removeStart();
+		
+		// set new start state 
+		for (State s : states) {
+			if (s.getID() == state.getID()) {
+				s.setStart(true);
+				startState = s;
+			}
+		}
+	}
+	
+	public void removeState(State state) {
+		
+		// check every state
+		for (Iterator<State> it = states.iterator(); it.hasNext();) {
+			State s = it.next();
+			
+			// remove references to the state (transitions)
+			s.removeTransitionsTo(state);
+			
+			// remove the state itself
+			if (s.getID() == state.getID()) {
+				//debug("Removing state " + state.getName() + " from automaton.");
+				it.remove();
+			}
+		}		
+	}
+	
+	public void removeStart() {
+		// unset start status of current start state
+		if (startState != null)
+			startState.setStart(false);
+		startState = null;
+	}
+
+	public boolean hasStateNamed(String name) {
+		return getStateNamed(name) != null;
+	}
+
+	public State getStateNamed(String name) {
+		for (State s : states) {
+			if (s.getName() == name)
+				return s;
+		}
+		return null;
 	}
 }

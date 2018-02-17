@@ -1,10 +1,10 @@
 package automata;
 
-public class Transition {    // MM: using class instead of simple pair struct
-	Character input;         //     for future dev w pushdown automata
+public class Transition {
+	String input;
 	State next;
 	
-	public Transition(Character i, State n) {
+	public Transition(String i, State n) {
 		input = i;
 		next = n;
 	}
@@ -13,11 +13,23 @@ public class Transition {    // MM: using class instead of simple pair struct
 		return "'" + input + "'" + " -> " + next.getPrintName();
 	}
 	
-	public Character getInput() {
+	public String getInput() {
 		return input;
 	}
 	
 	public State getNext() {
 		return next;
+	}
+
+	public Transition getCopy() {
+		return new Transition(input, next);
+	}
+
+	public void setNext(State state) {
+		next = state;
+	}
+
+	public void setInput(String text) {
+		input = text;
 	}
 }
