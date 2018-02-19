@@ -63,62 +63,26 @@ public class StateGraphicsManager extends JPanel {
 	protected void paintComponent(Graphics g) {
 		GraphicsTest.debug("In StateGraphicsManager paintComponent()");
 		super.paintComponent(g);
-		int arrowSize = 5;
 		
-		// draw all the arrows
-//		for (StateGraphic s : stateGraphics) {
-//			for (Transition t : s.getState().getTransitions()) {
-//
-//				// get coordinates
-//				int x1 = s.getX();                        // start state
-//				int y1 = s.getY();
-//				int x2 = t.getNext().getGraphic().getX(); // target state
-//				int y2 = t.getNext().getGraphic().getY();
-//				GraphicsTest.debug("Arrow from: " + x1 + "," + y1 + " to: " + x2 + "," + y2);
-//				
-//				// special case if pointing to self
-//				if (x1 == x2 && y1 == y2)
-//					continue;                // MM: TO DO
-//
-//				// draw arrow
-//				// following from SO answer to start
-//				// https://stackoverflow.com/questions/4112701/drawing-a-line-with-arrow-in-java
-//				Graphics2D g1 = (Graphics2D) g.create();
-//				int ARR_SIZE = 7;
-//				double dx = x2 - x1, dy = y2 - y1;
-//				double angle = Math.atan2(dy, dx);
-//				int len = (int) Math.sqrt(dx*dx + dy*dy);
-//				AffineTransform at = AffineTransform.getTranslateInstance(x1, y1);
-//				at.concatenate(AffineTransform.getRotateInstance(angle));
-//				g1.transform(at);
-//
-//				// Draw horizontal arrow starting in (0, 0)
-//				g1.drawLine(0, 0, len, 0);
-//				g1.fillPolygon(new int[] {len, len-ARR_SIZE, len-ARR_SIZE, len},
-//						new int[] {0, -ARR_SIZE, ARR_SIZE, 0}, 4);
-//			}
-//		}
 		// draw each state
 		for (StateGraphic s : stateGraphics) {
-			//GraphicsTest.debug("Painting state " + s.getName());
 			
-			// update selected state
+			// update selected state if any and if running
 			if (machine.getCurrentState() == s.getState() && 
-					machine.getStatus() != Automaton.READY) {    // if running
-				
-				if (currentState != null) {                // deselect previous
+					machine.getStatus() != Automaton.READY) {
+
+				// deselect previous state
+				if (currentState != null)
 					currentState.deselect();
-					//GraphicsTest.debug("Deselecting " + currentState.getName());
-				}
 				currentState = s; 
 				
+				// update current state status
 				if (machine.getStatus() == Automaton.ACCEPT)
 					currentState.accept();
 				else if (machine.getStatus() == Automaton.REJECT)
 					currentState.reject();
 				else
 					currentState.select();
-				//GraphicsTest.debug("Selecting " + currentState.getName());
 			}
 			
 			// calculate bounding rectangle upperleft coords
@@ -142,14 +106,70 @@ public class StateGraphicsManager extends JPanel {
 			g.drawString(s.getName(), s.x - (s.diameter/6), s.y + (s.diameter/10));
 			// MM: to do: will need to find better way to position this ^
 		}
-		GraphicsTest.debug("");  // newline
+		
+		// draw all the arrows
+		for (StateGraphic s : stateGraphics) {
+			for (Transition t : s.getState().getTransitions()) {
+				
+				StateGraphic target = t.getNext().getGraphic();
+
+				// get coordinates
+				int x1 = s.getX();       // start state
+				int y1 = s.getY();
+				int x2 = target.getX();  // target state
+				int y2 = target.getY();
+				//GraphicsTest.debug("Arrow from: " + x1 + "," + y1 + " to: " + x2 + "," + y2);
+				
+				// special case if pointing to self
+				if (x1 == x2 && y1 == y2)
+					continue;                // MM: TO DO
+
+				// set up variables
+				Graphics2D g2d = (Graphics2D) g;
+				AffineTransform origTransform = g2d.getTransform();
+			    double px0, py0, px1, py1;          // pts on circles
+			    float radius1 = s.getDiameter() / 2;
+			    float radius2 = target.getDiameter() / 2;
+			    
+			    // calculate angle, points of line joining the states' centers
+			    double angle = Math.atan2(y2 - y1, x2 - x1);
+			    px0 = x1 + radius1 * Math.cos(angle);
+			    py0 = y1 + radius1 * Math.sin(angle);
+			    px1 = x2 + radius2 * Math.cos(angle + Math.PI);
+			    py1 = y2 + radius2 * Math.sin(angle + Math.PI);
+			    
+			    // calculate arrow length
+			    int arrowLength = (int) Math.sqrt((px1 - px0) * (px1 - px0) + 
+			    		(py1 - py0) * (py1 - py0));
+			    int arrowSize = 5;
+			    
+			    // translate drawing matrix to start arrow at origin
+			    g2d.translate(px0, py0);
+			    g2d.rotate(angle);
+			    
+			    // draw the arrow
+			    int offset = 5;            // ensure no double-arrows between 2 states
+			    g2d.drawLine(0, offset, arrowLength, offset);           // arrow shaft
+			    g2d.drawLine(arrowLength, offset, 
+			    		arrowLength - arrowSize, -arrowSize+offset);  // arrowhead pt1
+			    g2d.drawLine(arrowLength, offset, 
+			    		arrowLength - arrowSize, arrowSize+offset);   // arrowhead pt2
+			    
+			    // draw the input
+			    g2d.rotate(-angle); // rotate back so input is rightside up
+			    //g.drawString(t.getInput(), arrowSize, arrowLength/2);
+			    // MM: TO DO: figure out how to place rightside up input
+			    //            in a readable location
+			    
+				g2d.setTransform(origTransform);  // reset transformation	
+			}
+		}
 	}
 
 	public StateGraphic withinStateBounds(Point point) {
 		
 		double x = point.getX();
 		double y = point.getY();
-		GraphicsTest.debug("Checking if " + x + "," + y + " is inside a state");
 		
 		// if point is within a state's circle, return the state
 		for (StateGraphic state : stateGraphics) {

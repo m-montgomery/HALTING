@@ -21,6 +21,7 @@ public class GraphicsTest {
 		s0.addTransition("a", s0);
 		s0.addTransition("b", s1);
 		s1.addTransition("a", s0);
+		
 		Automaton f = new Automaton();
 		f.addState(s0, true);          // start state
 		f.addState(s1);
