@@ -231,7 +231,7 @@ public class StateGraphicsManager extends JPanel {
 				
 				// if right click, pull up menu
 				else {
-					DropDown stateMenu = new DropDown(s, machine, mainWindow);
+					final DropDown stateMenu = new DropDown(s, machine, mainWindow);
 					stateMenu.show(me.getComponent(), me.getX(), me.getY());
 				}
 			}
@@ -270,7 +270,7 @@ public class StateGraphicsManager extends JPanel {
 		JMenuItem edit;
 		JMenuItem delete;
 		
-		public DropDown(StateGraphic s, Automaton machine, MainWindow win) {
+		public DropDown(final StateGraphic s, final Automaton machine, final MainWindow win) {
 
 			// edit state
 			edit = new JMenuItem(new AbstractAction("Edit") {
@@ -278,7 +278,7 @@ public class StateGraphicsManager extends JPanel {
 				public void actionPerformed(ActionEvent ae) {
 					
 					// open a new state editing window
-					StateWindow stateWindow = new StateWindow(s, machine, win);
+					final StateWindow stateWindow = new StateWindow(s, machine, win);
 				}
 			});
 			add(edit);

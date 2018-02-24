@@ -313,7 +313,7 @@ public class StateWindow extends JDialog {
 				stateNames.addItem(s.getName());
 
 				// make current transition's target state the selected item
-				if (t.getNext().getName() == s.getName())
+				if (transition.getNext().getName() == s.getName())
 					stateNames.setSelectedItem(s.getName());
 			}
 			
@@ -331,7 +331,7 @@ public class StateWindow extends JDialog {
 			});
 			
 			// make text field for input
-			inputField = new JTextField(t.getInput());
+			inputField = new JTextField(transition.getInput());
 			inputField.setFont(new Font("Monospaced", Font.PLAIN, 14));
 			inputField.setColumns(2);
 			
@@ -351,7 +351,7 @@ public class StateWindow extends JDialog {
 								"Error", JOptionPane.ERROR_MESSAGE);
 					else {
 						// change transition input
-						t.setInput(inputField.getText());
+						transition.setInput(inputField.getText());
 
 						// mark that there's been a change
 						madeTransitionChange = true;

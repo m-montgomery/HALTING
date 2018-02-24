@@ -18,20 +18,24 @@ public class GraphicsTest {
 		// init test FA
 		State s0 = new State();
 		State s1 = new State(true);    // accept state
+		State s2 = new State();
+
 		s0.addTransition("a", s0);
 		s0.addTransition("b", s1);
+		s0.addTransition("c", s2);
 		s1.addTransition("a", s0);
+		s2.addTransition("a", s0);
 		
-		Automaton f = new Automaton();
+		final Automaton f = new Automaton();
 		f.addState(s0, true);          // start state
 		f.addState(s1);
+		f.addState(s2);
 		
 		// launch window
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					JFrame.setDefaultLookAndFeelDecorated(true); // MM: TO DO: check on Windows & Mac
-					MainWindow frame = new MainWindow();
+					final MainWindow frame = new MainWindow();
 					frame.addAutomaton(f);
 					frame.update();
 				} 
