@@ -1,15 +1,14 @@
 package graphics;
 
-import java.awt.Container;
 import java.awt.Font;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.border.EmptyBorder;
 
 import automata.Automaton;
-import automata.State;
+import automata.NoStartStateDefined;
+import automata.NoTransitionDefined;
 
 import java.awt.GridLayout;
 import javax.swing.JLabel;
@@ -24,6 +23,7 @@ import javax.swing.JButton;
 import javax.swing.JTextArea;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JMenu;
 
 public class MainWindow extends JFrame {
@@ -155,7 +155,13 @@ public class MainWindow extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
 				graphicManager.clearStates();
-				machine.run(inputText.getText());
+				try {
+					machine.run(inputText.getText());
+				} catch (NoStartStateDefined e) {
+					reportException(e);
+				} catch (NoTransitionDefined e) {
+					reportException(e);
+				}
 				update();  // update states and status
 			}
 		});
@@ -189,7 +195,16 @@ public class MainWindow extends JFrame {
 		JButton btnStepForward = new JButton(new AbstractAction("Step -->") {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
-				machine.step();
+				graphicManager.clearStates();                // clear selections
+				if (machine.getStatus() == Automaton.READY)  // if 1st step..
+					machine.setInput(inputText.getText());   // ..set input
+				try { 
+					machine.step();                          // take a step
+				} catch (NoStartStateDefined e) {
+					reportException(e);
+				} catch (NoTransitionDefined e) {
+					reportException(e);
+				}
 				update();  // update states and status
 			}
 		});
@@ -249,5 +264,10 @@ public class MainWindow extends JFrame {
 			machineStatus = machine.getStatus();
 			lblStatus.setText("Status: " + machineStatus);
 		}		
+	}
+	
+	private void reportException(Exception e) {
+		JOptionPane.showMessageDialog(null,
+				e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 	}
 }

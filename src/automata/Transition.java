@@ -1,12 +1,16 @@
 package automata;
 
 public class Transition {
-	String input;
-	State next;
+	private String input;
+	private State next;
+	
+	private int ID;               // unique ID assigned by static transitionNumber
+	static int transitionNumber = 0;
 	
 	public Transition(String i, State n) {
 		input = i;
 		next = n;
+		ID = transitionNumber++;
 	}
 	
 	public String toString() {
@@ -15,6 +19,10 @@ public class Transition {
 	
 	public String getInput() {
 		return input;
+	}
+	
+	public int getID() {
+		return ID;
 	}
 	
 	public State getNext() {

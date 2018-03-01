@@ -47,6 +47,10 @@ public class StateGraphicsManager extends JPanel {
 			// MM: to do: implement algorithm to distribute states within panel
 			//x += state.getDiameter()*2;
 			y += s.getGraphic().getDiameter()*2;
+			if (y > 25 + s.getGraphic().getDiameter()*2) {
+				y = 25;
+				x = 25 + s.getGraphic().getDiameter()*2;
+			}
 		}
 
 	}

@@ -2,8 +2,6 @@ package graphics;
 
 import java.awt.EventQueue;
 
-import javax.swing.JFrame;
-
 import automata.Automaton;
 import automata.State;
 
@@ -24,7 +22,6 @@ public class GraphicsTest {
 		s0.addTransition("b", s1);
 		s0.addTransition("c", s2);
 		s1.addTransition("a", s0);
-		s2.addTransition("a", s0);
 		
 		final Automaton f = new Automaton();
 		f.addState(s0, true);          // start state

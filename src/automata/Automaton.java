@@ -3,8 +3,6 @@ package automata;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import graphics.GraphicsTest;
-
 public class Automaton {
 	ArrayList<State> states;
 	ArrayList<State> history;
@@ -60,17 +58,19 @@ public class Automaton {
 		s += "\n";
 		
 		// show history
-		if (history.size() > 1) {
-			int count = 0;
-			for (int i = 0; i < stepCount; i++) {
-				State st = history.get(i);
-				s += st.getPrintName();
-				s += " --" + input.get(count++) + "-> ";
+		if (currentState != null) {
+			if (history.size() > 1) {
+				int count = 0;
+				for (int i = 0; i < stepCount; i++) {
+					State st = history.get(i);
+					s += st.getPrintName();
+					s += " --" + input.get(count++) + "-> ";
+				}
+				s += currentState.getPrintName() + "\n\n";
 			}
-			s += currentState.getPrintName() + "\n\n";
+			
+			s += "STATE: " + currentState.getPrintName() + "\n";
 		}
-		
-		s += "STATE: " + currentState.getPrintName() + "\n";
 		
 		// show input
 		s += "INPUT: ";
@@ -127,18 +127,19 @@ public class Automaton {
 			input.add(inputString.substring(i, i+1));
 	}
 	
-	public boolean run(String inputString) {
+	public boolean run(String inputString) throws NoStartStateDefined, NoTransitionDefined {
 		setInput(inputString);
 		return run();
 	}
 	
-	public boolean run() {
+	public boolean run() throws NoStartStateDefined, NoTransitionDefined {
 		
+		// assert there is a start state
 		if (startState == null) {
-			// throw NoStartStateDefined exception
-			debug("No start state defined.");
 			status = ERROR;
-			return false;
+			throw new NoStartStateDefined();
+//			debug("No start state defined.");
+//			return false;
 		}
 
 		reset();
@@ -154,26 +155,35 @@ public class Automaton {
 		return accepted();
 	}
 	
-	public void step() {
+	public void step() throws NoTransitionDefined, NoStartStateDefined {
 		
 		// don't continue past input
 		if (inputCount >= input.size())   // MM: but what about epsilon moves after input?
 			return;
 		
-		status = RUN;
+		// assert there is a start state
+		if (startState == null) {
+			status = ERROR;
+			throw new NoStartStateDefined();
+		}
 		
+		status = RUN;
 		stepCount++;
+		
 		// find next state given current state & input
 		String currentInput = input.get(inputCount++);
-		debug("current input: " + currentInput);
-		debug("current state: " + currentState.toString());
+//		debug("current input: " + currentInput);
+//		debug("current state: " + currentState.toString());
 		State nextState = currentState.getNextState(currentInput);
+		
+		// report transition error
 		if (nextState == null) {
-			//throw noTransitionDefined exception
-			debug("No transition defined from " + currentState.getName() +
-					" on input " + currentInput);
+
 			status = ERROR;
-			return;
+			throw new NoTransitionDefined(currentState.getName(), currentInput);
+//			debug("No transition defined from " + currentState.getName() +
+//					" on input " + currentInput);
+//			return;
 		}
 		
 		// transition
@@ -265,9 +275,15 @@ public class Automaton {
 
 	public State getStateNamed(String name) {
 		for (State s : states) {
-			if (s.getName() == name)
+			if (s.getName().equals(name))
 				return s;
 		}
 		return null;
+	}
+
+	public String getCurrentInput() {
+		if (inputCount > 0)
+			return input.get(inputCount-1);
+		return input.get(0);
 	}
 }

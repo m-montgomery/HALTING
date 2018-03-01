@@ -96,13 +96,6 @@ public class State {
 		return isAccept;
 	}
 
-	public ArrayList<Transition> getTransitionsCopy() {
-		ArrayList<Transition> copy = new ArrayList<Transition>();
-		for (Transition t : transitions)
-			copy.add(t.getCopy());
-		return copy;
-	}
-
 	// used to edit transitions in runtime
 	public void setTransitions(ArrayList<Transition> newTransitions) {
 		transitions = newTransitions; 

@@ -4,12 +4,12 @@ import java.awt.Dialog;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.swing.AbstractAction;
 import javax.swing.ButtonGroup;
@@ -22,11 +22,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -47,7 +44,11 @@ public class StateWindow extends JDialog {
 	private boolean isStart;                      // new start status
 	private boolean isAccept;                     // new accept status
 	private boolean madeTransitionChange;         // track transition changes
-	private ArrayList<Transition> transitionsCopy;    // new transitions
+	
+	private ArrayList<TransitionTracker> transitionTrackers; // track transitions
+	private JPanel transitionPanel;                          // transition panel
+	private GridBagConstraints gbc_state;           // dropdown state constraints
+	private GridBagConstraints gbc_input;         // other transition constraints
 
 	public StateWindow(StateGraphic stateGraphic, Automaton auto, MainWindow window) {
 
@@ -61,8 +62,8 @@ public class StateWindow extends JDialog {
 		// initialize variables for tracking changes
 		isStart = state.isStart();
 		isAccept = state.isAccept();
-		transitionsCopy = state.getTransitionsCopy();  // get deep copy
 		madeTransitionChange = false;
+		transitionTrackers = new ArrayList<TransitionTracker>();
 
 		// set basic settings
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -194,51 +195,88 @@ public class StateWindow extends JDialog {
 		gbc_transitions.insets = new Insets(5, 5, 5, 5);
 		gbc_transitions.gridx = 0;
 		gbc_transitions.gridy = 3;
-		gbc_transitions.gridwidth = 3;
+		gbc_transitions.gridwidth = 2;
 		gbc_transitions.fill = GridBagConstraints.HORIZONTAL;
 		add(lblTransitions, gbc_transitions);
+		
+		// add transitions button
+		JButton btnAdd = new JButton(new AbstractAction("Add") {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+
+				// make a tracker (listens for changes to input & target state)
+				TransitionTracker tracker = new TransitionTracker(new Transition("", null));
+				addTransition(tracker);
+
+				// update window
+				repaint();
+				revalidate();
+
+				// mark that there's been a change
+				madeTransitionChange = true;
+			}
+		});
+		gbc_transitions.anchor = GridBagConstraints.EAST;
+		gbc_transitions.gridx = 2;
+		gbc_transitions.gridwidth = 1;
+		gbc_transitions.fill = GridBagConstraints.NONE;
+		add(btnAdd, gbc_transitions);
 
 		// transitions panel
-		JPanel transitions = new JPanel();
-		transitions.setLayout(new GridBagLayout());
-		JScrollPane transitionsScroll = new JScrollPane(transitions);
+		transitionPanel = new JPanel();
+		transitionPanel.setLayout(new GridBagLayout());
+		JScrollPane transitionsScroll = new JScrollPane(transitionPanel);
+		gbc_transitions.anchor = GridBagConstraints.CENTER;
+		gbc_transitions.gridx = 0;
 		gbc_transitions.gridy++;
+		gbc_transitions.gridwidth = 3;
 		gbc_transitions.weighty = 1.0;                  // hog vertical space
 		gbc_transitions.fill = GridBagConstraints.BOTH; // hog all space
 		add(transitionsScroll, gbc_transitions);
 
-		// constraints for input & arrow
-		GridBagConstraints gbc_input = new GridBagConstraints();
+		// constraints for delete button & input & arrow
+		gbc_input = new GridBagConstraints();     // save to add transitions later
 		gbc_input.insets = new Insets(5, 5, 5, 5);
 		gbc_input.gridx = 0;
 		gbc_input.gridy = 0;
-
+		
 		// constraints for dropdown list
-		GridBagConstraints gbc_state = new GridBagConstraints();
+		gbc_state = new GridBagConstraints();     // save to add transitions later
 		gbc_state.insets = new Insets(5, 5, 5, 5);
-		gbc_state.gridx = 2;
+		gbc_state.gridx = 3;
 		gbc_state.gridy = 0;
 		gbc_state.fill = GridBagConstraints.HORIZONTAL; // hog horizontal space
 
 		// create input, arrow, state entry for each transition
-		for (Transition t : transitionsCopy) { // use copy to edit in real time  
+		for (Transition t : state.getTransitions()) {
 
 			// make a tracker (listens for changes to input & target state)
 			TransitionTracker tracker = new TransitionTracker(t);
-			
-			// input field
-			gbc_input.gridx = 0;
-			transitions.add(tracker.inputField, gbc_input);
-			gbc_input.gridx++;
-
-			// arrow label
-			transitions.add(new JLabel("-->"), gbc_input);
-			gbc_input.gridy++;
-
-			// state selection dropdown list
-			transitions.add(tracker.stateNames, gbc_state);
-			gbc_state.gridy++;
+			addTransition(tracker);            // add all elements to panel
 		}
+	}
+	
+	private void addTransition(TransitionTracker tracker) {
+		
+		// save for later
+		transitionTrackers.add(tracker);
+
+		// delete button
+		gbc_input.gridx = 0;
+		transitionPanel.add(tracker.btnDelete, gbc_input);
+		gbc_input.gridx++;
+		
+		// input field
+		transitionPanel.add(tracker.inputField, gbc_input);
+		gbc_input.gridx++;
+
+		// arrow label
+		transitionPanel.add(tracker.arrow, gbc_input);
+		gbc_input.gridy++;
+
+		// state selection dropdown list
+		transitionPanel.add(tracker.stateNames, gbc_state);
+		gbc_state.gridy++;
 	}
 	
 	private void initButtons() {
@@ -274,9 +312,17 @@ public class StateWindow extends JDialog {
 			
 			// update name
 			String newName = nameInput.getText();
-			if (newName != state.getName() && 
-					!machine.hasStateNamed(newName))   // MM: to do: add warning about repeat names?
-				state.setName(newName);
+			if (!newName.equals(state.getName())) {
+				
+				// report error if name already taken
+				if (machine.hasStateNamed(newName))
+					JOptionPane.showMessageDialog(null, 
+							"This automaton already has a state named " + 
+							newName + "; canceling rename.", 
+							"Error", JOptionPane.ERROR_MESSAGE);
+				else
+					state.setName(newName);
+			}
 
 			// update start status
 			if (isStart != state.isStart()) {
@@ -290,8 +336,14 @@ public class StateWindow extends JDialog {
 			state.setAccept(isAccept);
 
 			// update transitions
-			if (madeTransitionChange)
-				state.setTransitions(transitionsCopy);
+			if (madeTransitionChange) {
+				
+				// build new transition list from remaining trackers
+				ArrayList<Transition> newTransitions = new ArrayList<Transition>();
+				for (TransitionTracker t : transitionTrackers)
+					newTransitions.add(t.transition);
+				state.setTransitions(newTransitions);
+			}
 		}
 
 		// close dialog window
@@ -301,29 +353,38 @@ public class StateWindow extends JDialog {
 
 	class TransitionTracker {
 		public Transition transition;
+		
+		// save graphical elements for later deletion from panel if needed
+		public JButton btnDelete;
 		public JComboBox<String> stateNames;
 		public JTextField inputField;
+		public JLabel arrow;
 
 		public TransitionTracker(Transition t) {
 			transition = t;
 			stateNames = new JComboBox<String>();
+			arrow = new JLabel("-->");
 			
-			// make dropdown list of state names
-			for (State s : machine.getStates()) {  
-				stateNames.addItem(s.getName());
-
-				// make current transition's target state the selected item
-				if (transition.getNext().getName() == s.getName())
-					stateNames.setSelectedItem(s.getName());
-			}
-			
-			// when changed, update transition's target state
-			stateNames.addActionListener(new AbstractAction() {
+			// make delete button to remove transition
+			btnDelete = new JButton(new AbstractAction("Del") {
 				@Override
 				public void actionPerformed(ActionEvent ae) {
-					// set new target
-					transition.setNext(machine.getStateNamed(
-							(String)stateNames.getSelectedItem()));
+					
+					// remove transition from list of transition trackers
+					for (Iterator<TransitionTracker> it = 
+							transitionTrackers.iterator(); it.hasNext();) {
+						TransitionTracker t = it.next();
+						if (t.transition.getID() == transition.getID())
+							it.remove();
+					}
+					
+					// update window
+					transitionPanel.remove(btnDelete);
+					transitionPanel.remove(stateNames);
+					transitionPanel.remove(inputField);
+					transitionPanel.remove(arrow);
+					repaint();
+					revalidate();
 					
 					// mark that there's been a change
 					madeTransitionChange = true;
@@ -356,6 +417,29 @@ public class StateWindow extends JDialog {
 						// mark that there's been a change
 						madeTransitionChange = true;
 					}
+				}
+			});
+			
+			// make dropdown list of state names
+			for (State s : machine.getStates()) {  
+				stateNames.addItem(s.getName());
+
+				// make current transition's target state the selected item
+				if (transition.getNext() != null &&
+						transition.getNext().getName() == s.getName())
+					stateNames.setSelectedItem(s.getName());
+			}
+			
+			// when changed, update transition's target state
+			stateNames.addActionListener(new AbstractAction() {
+				@Override
+				public void actionPerformed(ActionEvent ae) {
+					// set new target
+					transition.setNext(machine.getStateNamed(
+							(String)stateNames.getSelectedItem()));
+					
+					// mark that there's been a change
+					madeTransitionChange = true;
 				}
 			});
 		}
