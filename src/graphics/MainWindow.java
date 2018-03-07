@@ -162,7 +162,7 @@ public class MainWindow extends JFrame {
 				} catch (NoTransitionDefined e) {
 					reportException(e);
 				}
-				update();  // update states and status
+				update();                      // update states and status
 			}
 		});
 		sidebar.add(btnRun, gbc_sidebar);
@@ -173,7 +173,9 @@ public class MainWindow extends JFrame {
 			public void actionPerformed(ActionEvent ae) {
 				machine.reset();
 				graphicManager.clearStates();
-				update();  // update states and status
+				inputText.setEditable(false);  // enable input editing
+				btnRun.setEnabled(true);       // enable run btn
+				update();                      // update states and status
 			}
 		});
 		gbc_sidebar.gridx++;
@@ -184,9 +186,12 @@ public class MainWindow extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
 				machine.stepBack();
-				update();  // update states and status
+//				if (machine.atStart())                                  // MM: TO DO
+//					btnStepBack.setEnabled(false); // disable step back
+				update();                          // update states and status
 			}
 		});
+		btnStepBack.setEnabled(false);         // disable step back
 		gbc_sidebar.gridx = 0;
 		gbc_sidebar.gridy++;
 		sidebar.add(btnStepBack, gbc_sidebar);
@@ -196,10 +201,14 @@ public class MainWindow extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
 				graphicManager.clearStates();                // clear selections
-				if (machine.getStatus() == Automaton.READY)  // if 1st step..
-					machine.setInput(inputText.getText());   // ..set input
+				if (machine.atStart()) {                     // if 1st step:
+					machine.setInput(inputText.getText());    // set input
+					inputText.setEditable(false);             // disable input edit
+					btnRun.setEnabled(false);                 // disable run btn
+				}
 				try { 
 					machine.step();                          // take a step
+					btnStepBack.setEnabled(true);            // enable step back
 				} catch (NoStartStateDefined e) {
 					reportException(e);
 				} catch (NoTransitionDefined e) {

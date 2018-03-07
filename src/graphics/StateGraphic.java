@@ -8,7 +8,7 @@ public class StateGraphic extends JComponent {
 
 	private static final long serialVersionUID = 1L;
 	
-	public int x;
+	public int x;              // center coordinates
 	public int y;
 	public int diameter;       // including border
 	public int borderWidth;

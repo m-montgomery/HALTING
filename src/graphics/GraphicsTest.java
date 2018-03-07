@@ -18,10 +18,11 @@ public class GraphicsTest {
 		State s1 = new State(true);    // accept state
 		State s2 = new State();
 
-		s0.addTransition("a", s0);
 		s0.addTransition("b", s1);
 		s0.addTransition("c", s2);
 		s1.addTransition("a", s0);
+		s2.addTransition("d", s0);
+		s1.addTransition("b", s1);
 		
 		final Automaton f = new Automaton();
 		f.addState(s0, true);          // start state

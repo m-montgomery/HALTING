@@ -286,4 +286,8 @@ public class Automaton {
 			return input.get(inputCount-1);
 		return input.get(0);
 	}
+
+	public boolean atStart() {
+		return inputCount == 0;
+	}
 }

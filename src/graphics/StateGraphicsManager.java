@@ -56,17 +56,19 @@ public class StateGraphicsManager extends JPanel {
 	}
 	
 	private void addState(State s, int x, int y) {
-		//GraphicsTest.debug("Just made graphic for state " + s.getName() + " at " + x + "," + y);
-		StateGraphic state = new StateGraphic(s);
-		state.setLocation(x, y);
-		s.setGraphic(state);
-		stateGraphics.add(state);
+		StateGraphic state = new StateGraphic(s);   // make new StateGraphic
+		state.setLocation(x, y);                    // set its location
+		s.setGraphic(state);                        // set state's StateGraphic
+		stateGraphics.add(state);                   // add graphic to manager
 	}
 	
 	@Override
 	protected void paintComponent(Graphics g) {
-		GraphicsTest.debug("In StateGraphicsManager paintComponent()");
+		//GraphicsTest.debug("In StateGraphicsManager paintComponent()");
 		super.paintComponent(g);
+		
+		// MM: TO DO: reorganize paintComponent to call functions for easier
+		//            viewing of paintComponent's actions? e.g. drawState()
 		
 		// draw each state
 		for (StateGraphic s : stateGraphics) {
@@ -114,15 +116,13 @@ public class StateGraphicsManager extends JPanel {
 		// draw all the arrows
 		for (StateGraphic s : stateGraphics) {
 			for (Transition t : s.getState().getTransitions()) {
-				
-				StateGraphic target = t.getNext().getGraphic();
 
 				// get coordinates
-				int x1 = s.getX();       // start state
+				int x1 = s.getX();                              // start state
 				int y1 = s.getY();
-				int x2 = target.getX();  // target state
+				StateGraphic target = t.getNext().getGraphic(); // target state
+				int x2 = target.getX();
 				int y2 = target.getY();
-				//GraphicsTest.debug("Arrow from: " + x1 + "," + y1 + " to: " + x2 + "," + y2);
 				
 				// special case if pointing to self
 				if (x1 == x2 && y1 == y2)
@@ -130,17 +130,19 @@ public class StateGraphicsManager extends JPanel {
 
 				// set up variables
 				Graphics2D g2d = (Graphics2D) g;
-				AffineTransform origTransform = g2d.getTransform();
-			    double px0, py0, px1, py1;          // pts on circles
+				AffineTransform origTransform = g2d.getTransform(); // save
+			    double px0, py0, px1, py1;                // pts on circles
 			    float radius1 = s.getDiameter() / 2;
 			    float radius2 = target.getDiameter() / 2;
 			    
-			    // calculate angle, points of line joining the states' centers
+			    // calculate line angle in radians (0 = right; move clockwise)
 			    double angle = Math.atan2(y2 - y1, x2 - x1);
-			    px0 = x1 + radius1 * Math.cos(angle);
-			    py0 = y1 + radius1 * Math.sin(angle);
-			    px1 = x2 + radius2 * Math.cos(angle + Math.PI);
-			    py1 = y2 + radius2 * Math.sin(angle + Math.PI);
+			    
+			    // calculate points of the line joining the states' centers
+			    px0 = x1 + radius1 * Math.cos(angle);           // starting x
+			    py0 = y1 + radius1 * Math.sin(angle);           // starting y
+			    px1 = x2 + radius2 * Math.cos(angle + Math.PI); // target x
+			    py1 = y2 + radius2 * Math.sin(angle + Math.PI); // target y
 			    
 			    // calculate arrow length
 			    int arrowLength = (int) Math.sqrt((px1 - px0) * (px1 - px0) + 
@@ -148,24 +150,35 @@ public class StateGraphicsManager extends JPanel {
 			    int arrowSize = 5;
 			    
 			    // translate drawing matrix to start arrow at origin
-			    g2d.translate(px0, py0);
-			    g2d.rotate(angle);
+			    g2d.translate(px0, py0);  // origin is now start state's point
+			    g2d.rotate(angle);        // rotate matrix by line angle
 			    
 			    // draw the arrow
-			    int offset = 5;            // ensure no double-arrows between 2 states
-			    g2d.drawLine(0, offset, arrowLength, offset);           // arrow shaft
+			    int offset = 5;           // shift to account for double arrows
+			    g2d.drawLine(0, offset, arrowLength, offset);        // shaft
 			    g2d.drawLine(arrowLength, offset, 
-			    		arrowLength - arrowSize, -arrowSize+offset);  // arrowhead pt1
+			    		arrowLength - arrowSize, -arrowSize+offset); // head pt1
 			    g2d.drawLine(arrowLength, offset, 
-			    		arrowLength - arrowSize, arrowSize+offset);   // arrowhead pt2
+			    		arrowLength - arrowSize, arrowSize+offset);  // head pt2
 			    
-			    // draw the input
-			    g2d.rotate(-angle); // rotate back so input is rightside up
-			    //g.drawString(t.getInput(), arrowSize, arrowLength/2);
-			    // MM: TO DO: figure out how to place rightside up input
-			    //            in a readable location
+			    g2d.rotate(-angle);          // rotate back so input is upright
+				g2d.setTransform(origTransform);        // reset transformation
 			    
-				g2d.setTransform(origTransform);  // reset transformation	
+			    // calculate coordinates for input at 0 degree arrow (-->)
+			    double bx, by, cx, cy;
+			    offset = 4;                // looks better slightly smaller
+			    bx = s.x + s.diameter/2;   // shift over by radius
+			    by = s.y + 2*s.diameter/5; // shift over and down slightly
+			    // (note that drawString takes x and y of bottom-left of input)
+			    
+			    // rotate the 0 deg. coords around circle at angle of arrow
+			    cx = Math.cos(angle) * (bx - s.x) - 
+			    		Math.sin(angle) * (by - s.y) + s.x - offset;
+			    cy = Math.sin(angle) * (bx - s.x) + 
+			    		Math.cos(angle) * (by - s.y) + s.y + offset;
+			    
+			    // draw the input				
+				g.drawString(t.getInput(), (int)cx, (int)cy);
 			}
 		}
 	}
