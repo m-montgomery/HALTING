@@ -205,7 +205,13 @@ public class StateWindow extends JDialog {
 			public void actionPerformed(ActionEvent ae) {
 
 				// make a tracker (listens for changes to input & target state)
-				TransitionTracker tracker = new TransitionTracker(new Transition("", null));
+				TransitionTracker tracker = new TransitionTracker(
+						new Transition("", null));
+
+				// set default target to first state in list
+				// (guaranteed a state exists if accessing a StateWindow)
+				String targetName = (String)tracker.stateNames.getSelectedItem();
+				tracker.transition.setNext(machine.getStateNamed(targetName));
 				addTransition(tracker);
 
 				// update window

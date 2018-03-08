@@ -39,17 +39,17 @@ public class StateGraphicsManager extends JPanel {
 	}
 	
 	public void createStates(ArrayList<State> states) {
-		int x = 25;
-		int y = 25;
+		int x = 40;
+		int y = 40;
 		for (State s : states) {
 			addState(s, x, y);
 			
 			// MM: to do: implement algorithm to distribute states within panel
 			//x += state.getDiameter()*2;
 			y += s.getGraphic().getDiameter()*2;
-			if (y > 25 + s.getGraphic().getDiameter()*2) {
-				y = 25;
-				x = 25 + s.getGraphic().getDiameter()*2;
+			if (y > 40 + s.getGraphic().getDiameter()*2) {
+				y = 40;
+				x = 40 + s.getGraphic().getDiameter()*2;
 			}
 		}
 
@@ -74,8 +74,8 @@ public class StateGraphicsManager extends JPanel {
 		for (StateGraphic s : stateGraphics) {
 			
 			// update selected state if any and if running
-			if (machine.getCurrentState() == s.getState() && 
-					machine.getStatus() != Automaton.READY) {
+			if (machine.getCurrentState() == s.getState()) { 
+					//&& machine.getStatus() != Automaton.READY) {
 
 				// deselect previous state
 				if (currentState != null)
@@ -117,7 +117,7 @@ public class StateGraphicsManager extends JPanel {
 		for (StateGraphic s : stateGraphics) {
 			for (Transition t : s.getState().getTransitions()) {
 
-				// get coordinates
+				// get center coordinates of both states
 				int x1 = s.getX();                              // start state
 				int y1 = s.getY();
 				StateGraphic target = t.getNext().getGraphic(); // target state
@@ -206,16 +206,16 @@ public class StateGraphicsManager extends JPanel {
 
 	public void clearStates() {
 		for (StateGraphic state : stateGraphics)
-			state.deselect();
+			state.resetStatus();
 		currentState = null;
 	}
 
 	// CLASS: MouseListener //
 	class MouseListener extends MouseAdapter {
 		
-		private StateGraphic selectedState = null;
+		public StateGraphic selectedState = null;   // MM: TO DO: clear this upon btnReset? how to access? 
 		
-		public void mouseDragged(MouseEvent me) {   // MM: to do: check if this registers when using a real mouse
+		public void mouseDragged(MouseEvent me) {   // MM: TO DO: check if this registers when using a real mouse
 			GraphicsTest.debug("Mouse dragged!");
 			
 			if (selectedState != null) {
@@ -225,7 +225,7 @@ public class StateGraphicsManager extends JPanel {
 		}
 
 		public void mouseReleased(MouseEvent me) {
-			GraphicsTest.debug("Mouse released!");
+			// get state clicked on (if any) 
 			StateGraphic s = withinStateBounds(me.getPoint());
 
 			// if clicked on a state
@@ -240,10 +240,8 @@ public class StateGraphicsManager extends JPanel {
 					
 					// mark new state as selected
 					selectedState = s;
-					selectedState.select(); // change state color to show selection
+					selectedState.click(); // change state color to show selection
 					repaint();
-					
-					GraphicsTest.debug("Selected state: " + s.getName());
 				}
 				
 				// if right click, pull up menu
@@ -253,19 +251,15 @@ public class StateGraphicsManager extends JPanel {
 				}
 			}
 
-			
 			// if didn't click on a state
 			else {
-			//if (withinStateBounds(me.getPoint()) == null) { 
 
 				// if have a selected state, relocate it
 				if (selectedState != null) {
-					GraphicsTest.debug("Moving state " + selectedState.getName() + 
-							" to " + me.getX() + "," + me.getY());
 
 					// relocate selected state and deselect it
 					selectedState.setLocation(me.getX(), me.getY());
-					selectedState.deselect();
+					selectedState.unclick();
 					selectedState = null;
 				}
 

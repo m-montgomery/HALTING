@@ -172,31 +172,24 @@ public class Automaton {
 		
 		// find next state given current state & input
 		String currentInput = input.get(inputCount++);
-//		debug("current input: " + currentInput);
-//		debug("current state: " + currentState.toString());
 		State nextState = currentState.getNextState(currentInput);
 		
 		// report transition error
 		if (nextState == null) {
-
 			status = ERROR;
 			throw new NoTransitionDefined(currentState.getName(), currentInput);
-//			debug("No transition defined from " + currentState.getName() +
-//					" on input " + currentInput);
-//			return;
 		}
 		
 		// transition
 		history.add(nextState);  // add next state to history
 		currentState = nextState;
-		//debug("Adding state " + currentState.getPrintName() + " to history");
 		if (reachedEndOfInput())
 			status = accepted() ? ACCEPT : REJECT;
 	}
 	
 	public void stepBack() {
 		// don't step back if at beginning
-		if (inputCount == 0)
+		if (atStart())
 			return;
 		
 		status = RUN;

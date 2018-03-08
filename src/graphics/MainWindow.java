@@ -81,7 +81,7 @@ public class MainWindow extends JFrame {
 		// FILE MENU //
 		
 		// New
-		JMenuItem menuItemNew = new JMenuItem(new AbstractAction("New") {
+		final JMenuItem menuItemNew = new JMenuItem(new AbstractAction("New") {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
 				MainWindow newFrame = new MainWindow();
@@ -93,21 +93,21 @@ public class MainWindow extends JFrame {
 		
 //		// Open
 //		// MM: to do: add click actions
-//		JMenuItem menuItemOpen = new JMenuItem("Open");
+//		final JMenuItem menuItemOpen = new JMenuItem("Open");
 //		menuFile.add(menuItemOpen);
 //		
 //		// Save
 //		// MM: to do: add click actions
-//		JMenuItem menuItemSave = new JMenuItem("Save");
+//		final JMenuItem menuItemSave = new JMenuItem("Save");
 //		menuFile.add(menuItemSave);
 //		
 //		// Help
 //		// MM: to do: add click actions
-//		JMenuItem menuItemHelp = new JMenuItem("Help");
+//		final JMenuItem menuItemHelp = new JMenuItem("Help");
 //		menuFile.add(menuItemHelp);
 		
 		// Exit
-		JMenuItem menuItemExit = new JMenuItem(new AbstractAction("Exit") {
+		final JMenuItem menuItemExit = new JMenuItem(new AbstractAction("Exit") {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
 				setVisible(false);
@@ -120,7 +120,7 @@ public class MainWindow extends JFrame {
 		// EDIT MENU //
 		
 		// Refresh
-		JMenuItem menuItemRefresh = new JMenuItem(new AbstractAction("Refresh") {
+		final JMenuItem menuItemRefresh = new JMenuItem(new AbstractAction("Refresh") {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
 				update();
@@ -130,7 +130,7 @@ public class MainWindow extends JFrame {
 		
 //		// Change to...
 //		// MM: to do: add click actions
-//		JMenuItem menuItemChange = new JMenuItem("Change to...");
+//		final JMenuItem menuItemChange = new JMenuItem("Change to...");
 //		menuEdit.add(menuItemChange);
 	}
 	
@@ -150,8 +150,11 @@ public class MainWindow extends JFrame {
 		gbc_sidebar.gridx = 0;
 		gbc_sidebar.gridy = 0;
 		
+		// init step back button here so reset button can reference it
+		final JButton btnStepBack = new JButton("<-- Step");
+		
 		// run button
-		JButton btnRun = new JButton(new AbstractAction("Run") {
+		final JButton btnRun = new JButton(new AbstractAction("Run") {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
 				graphicManager.clearStates();
@@ -168,13 +171,14 @@ public class MainWindow extends JFrame {
 		sidebar.add(btnRun, gbc_sidebar);
 		
 		// reset button
-		JButton btnReset = new JButton(new AbstractAction("Reset") {
+		final JButton btnReset = new JButton(new AbstractAction("Reset") {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
 				machine.reset();
 				graphicManager.clearStates();
-				inputText.setEditable(false);  // enable input editing
+				inputText.setEditable(true);   // enable input editing
 				btnRun.setEnabled(true);       // enable run btn
+				btnStepBack.setEnabled(false); // disable step back
 				update();                      // update states and status
 			}
 		});
@@ -182,12 +186,14 @@ public class MainWindow extends JFrame {
 		sidebar.add(btnReset, gbc_sidebar);
 		
 		// step back button
-		JButton btnStepBack = new JButton(new AbstractAction("<-- Step") {
+		// initialized first (above, so btnReset can use it), now add action;
+		// otherwise, reference to self in btnStepBack.setEnabled causes error
+		btnStepBack.addActionListener(new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
 				machine.stepBack();
-//				if (machine.atStart())                                  // MM: TO DO
-//					btnStepBack.setEnabled(false); // disable step back
+				if (machine.atStart())
+					btnStepBack.setEnabled(false); // disable step back
 				update();                          // update states and status
 			}
 		});
@@ -197,7 +203,7 @@ public class MainWindow extends JFrame {
 		sidebar.add(btnStepBack, gbc_sidebar);
 		
 		// step forward button
-		JButton btnStepForward = new JButton(new AbstractAction("Step -->") {
+		final JButton btnStepForward = new JButton(new AbstractAction("Step -->") {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
 				graphicManager.clearStates();                // clear selections
@@ -221,7 +227,7 @@ public class MainWindow extends JFrame {
 		sidebar.add(btnStepForward, gbc_sidebar);
 		
 		// input label
-		JLabel lblInput = new JLabel("Input");
+		final JLabel lblInput = new JLabel("Input");
 		gbc_sidebar.insets = new Insets(5, 5, 0, 5);  // T, L, B, R
 		gbc_sidebar.anchor = GridBagConstraints.SOUTH;
 		gbc_sidebar.gridx = 0;
