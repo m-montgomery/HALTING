@@ -283,4 +283,8 @@ public class Automaton {
 	public boolean atStart() {
 		return inputCount == 0;
 	}
+
+	public int getInputNum() {
+		return inputCount;
+	}
 }

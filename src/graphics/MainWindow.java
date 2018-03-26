@@ -1,5 +1,6 @@
 package graphics;
 
+import java.awt.Dimension;
 import java.awt.Font;
 
 import javax.swing.JFrame;
@@ -21,6 +22,12 @@ import javax.swing.JSplitPane;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JTextArea;
+import javax.swing.JTextPane;
+import javax.swing.text.StyleContext;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -38,7 +45,8 @@ public class MainWindow extends JFrame {
 	private JLabel lblStatus;                       // label for machine status
 	private String machineStatus = Automaton.READY; // (default is Ready)
 	
-	private JTextArea inputText;                    // text area for input
+	//private JTextArea inputText;                    // text area for input
+	private JTextPane inputText;                    // text area for input
 	
 	public MainWindow() {
 		
@@ -123,7 +131,7 @@ public class MainWindow extends JFrame {
 		final JMenuItem menuItemRefresh = new JMenuItem(new AbstractAction("Refresh") {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
-				update();
+				update();    // update states, labels, text
 			}			
 		});
 		menuEdit.add(menuItemRefresh);
@@ -165,7 +173,7 @@ public class MainWindow extends JFrame {
 				} catch (NoTransitionDefined e) {
 					reportException(e);
 				}
-				update();                      // update states and status
+				update();                      // update states, labels, text
 			}
 		});
 		sidebar.add(btnRun, gbc_sidebar);
@@ -174,12 +182,12 @@ public class MainWindow extends JFrame {
 		final JButton btnReset = new JButton(new AbstractAction("Reset") {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
-				machine.reset();
-				graphicManager.clearStates();
-				inputText.setEditable(true);   // enable input editing
-				btnRun.setEnabled(true);       // enable run btn
-				btnStepBack.setEnabled(false); // disable step back
-				update();                      // update states and status
+				machine.reset();                 // reset the automaton
+				graphicManager.clearStates();    // clear state selection
+				inputText.setEditable(true);     // enable input editing
+				btnRun.setEnabled(true);         // enable run btn
+				btnStepBack.setEnabled(false);   // disable step back
+				update();                        // update states, labels, text
 			}
 		});
 		gbc_sidebar.gridx++;
@@ -191,10 +199,11 @@ public class MainWindow extends JFrame {
 		btnStepBack.addActionListener(new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
+				graphicManager.clearStates();      // clear selections
 				machine.stepBack();
 				if (machine.atStart())
 					btnStepBack.setEnabled(false); // disable step back
-				update();                          // update states and status
+				update();                          // update states, labels, text
 			}
 		});
 		btnStepBack.setEnabled(false);         // disable step back
@@ -220,7 +229,7 @@ public class MainWindow extends JFrame {
 				} catch (NoTransitionDefined e) {
 					reportException(e);
 				}
-				update();  // update states and status
+				update();  // update states, labels, text
 			}
 		});
 		gbc_sidebar.gridx++;
@@ -235,11 +244,10 @@ public class MainWindow extends JFrame {
 		gbc_sidebar.gridwidth = 2;          // fill entire row
 		sidebar.add(lblInput, gbc_sidebar);
 
-		// input text field
-		inputText = new JTextArea();
-		inputText.setFont(new Font("Monospaced", Font.PLAIN, 14));
-		inputText.setLineWrap(true);
-		JScrollPane areaScrollPane = new JScrollPane(inputText);  // make input field scrollable
+		// input text field (scrollable)
+		// MM: TO DO: JTextPane no longer wraps lines properly; add workaround
+		inputText = initTextPane();
+		JScrollPane areaScrollPane = new JScrollPane(inputText);
 		gbc_sidebar.insets = new Insets(0, 5, 5, 5);  // T, L, B, R
 		gbc_sidebar.gridy++;
 		gbc_sidebar.weighty = 1.0;
@@ -255,11 +263,58 @@ public class MainWindow extends JFrame {
 		sidebar.add(lblStatus, gbc_sidebar);
 		
 		// automaton type label
-		lblType = new JLabel("Type: " + machineType);   // default: DFA
+		lblType = new JLabel("Type: " + machineType);       // default: DFA
 		gbc_sidebar.gridy++;
 		sidebar.add(lblType, gbc_sidebar);
 	}
 	
+	private JTextPane initTextPane() {
+		// make text pane
+		JTextPane pane = new JTextPane();
+		
+		// initialize styles
+		StyledDocument doc = pane.getStyledDocument();
+		Style defaultStyle = StyleContext.getDefaultStyleContext().getStyle(StyleContext.DEFAULT_STYLE);
+		
+		// regular is monospaced 16pt
+		Style regularStyle = doc.addStyle("regular", defaultStyle);
+		StyleConstants.setFontFamily(defaultStyle, "Monospaced");
+		StyleConstants.setFontSize(defaultStyle, 16);
+		pane.setFont(new Font("Monospaced", Font.PLAIN, 16));
+		
+		// bold is regular + bolded (used for current input character)
+		Style boldStyle = doc.addStyle("bold", regularStyle);
+		StyleConstants.setBold(boldStyle, true);
+		
+		return pane;
+	}
+	
+	private void updateTextStyle(int boldIndex) {
+		String input = inputText.getText();
+		StyledDocument doc = inputText.getStyledDocument();
+		inputText.setText("");  // clear text
+		
+		// add each character of input one by one
+		for (int i = 0; i < input.length(); i++) {
+			try {
+				// bold character if current input
+				if (i == boldIndex)
+					doc.insertString(doc.getLength(), 
+							input.substring(i, i+1), 
+							doc.getStyle("bold"));
+				
+				// all other characters are normal
+				else
+					doc.insertString(doc.getLength(), 
+							input.substring(i, i+1), 
+							doc.getStyle("regular"));
+			} catch (BadLocationException e) {
+				// MM: ?
+				e.printStackTrace();
+			}
+		}
+	}
+
 	public void addAutomaton(Automaton auto) {
 		machine = auto;
 		graphicManager.addAutomaton(machine);
@@ -278,7 +333,10 @@ public class MainWindow extends JFrame {
 		if (machine.getStatus() != machineStatus) {       // automaton status
 			machineStatus = machine.getStatus();
 			lblStatus.setText("Status: " + machineStatus);
-		}		
+		}
+		
+		// update input text styling
+		updateTextStyle(machine.getInputNum()-1);    // bold current input char
 	}
 	
 	private void reportException(Exception e) {
