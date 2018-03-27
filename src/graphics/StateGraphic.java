@@ -54,14 +54,14 @@ public class StateGraphic extends JComponent {
 	}
 	
 	private void updateColor() {
-		if (selected)
-			currentColor = selectedCircleColor;
+	    if (clicked)
+			currentColor = clickedCircleColor;
 		else if (accepted)
 			currentColor = acceptedCircleColor;
 		else if (rejected)
 			currentColor = rejectedCircleColor;
-		else if (clicked)
-			currentColor = clickedCircleColor;
+		else if (selected)
+			currentColor = selectedCircleColor;
 		else
 			currentColor = defaultCircleColor;
 	}

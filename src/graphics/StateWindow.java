@@ -375,8 +375,8 @@ public class StateWindow extends JDialog {
 			arrow = new JLabel("-->");
 			
 			// make delete button to remove transition
-			//btnDelete = new JButton(new AbstractAction("Del") {  
-			btnDelete = new JButton(new AbstractAction() {
+			btnDelete = new JButton(new AbstractAction("Del") {  
+			//btnDelete = new JButton(new AbstractAction() {
 				// MM: TO DO: make this an icon instead of "Del" - maybe an X 
 				@Override
 				public void actionPerformed(ActionEvent ae) {
@@ -410,8 +410,8 @@ public class StateWindow extends JDialog {
 			// MM: TO DO: figure out better file system org
 			//            currently file is just placed in bin/graphics
 			// MM: TO DO: fit button to image
-			ImageIcon icon = new ImageIcon(getClass().getResource("x_icon.png"));
-			btnDelete.setIcon(icon);
+			// ImageIcon icon = new ImageIcon(getClass().getResource("x_icon.png"));
+			// btnDelete.setIcon(icon);
 //			
 			// make text field for input
 			inputField = new JTextField(transition.getInput());

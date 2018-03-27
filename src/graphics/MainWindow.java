@@ -47,6 +47,8 @@ public class MainWindow extends JFrame {
 	
 	//private JTextArea inputText;                    // text area for input
 	private JTextPane inputText;                    // text area for input
+    // MM: ^ currently using JTextPane for text bolding, but the line wrapping
+    //       doesn't work. might revert to JTextArea and skip the bolding. 
 	
 	public MainWindow() {
 		
@@ -54,6 +56,7 @@ public class MainWindow extends JFrame {
 		setTitle("HALTING");
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 750, 400);
+		setLocationByPlatform(true);
 		//frame.setIconImage(new ImageIcon(imgURL).getImage()); // MM: TO DO: add icon
 		
 		// init content containers
@@ -67,12 +70,13 @@ public class MainWindow extends JFrame {
 		
 		// make graphics display panel (righthand side of splitPanel)
 		graphicManager = new StateGraphicsManager(this);
-		JScrollPane rightComponent = new JScrollPane(graphicManager);
-		splitPane.setRightComponent(rightComponent);
+		splitPane.setRightComponent(graphicManager);  // MM: don't need scroll?
+		// JScrollPane rightComponent = new JScrollPane(graphicManager);
+		// splitPane.setRightComponent(rightComponent);
 		
 		// set default machine
 		addAutomaton(new Automaton());
-		
+
 		setVisible(true);
 	}
 
