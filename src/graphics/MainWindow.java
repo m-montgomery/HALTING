@@ -104,17 +104,17 @@ public class MainWindow extends JFrame {
 		menuFile.add(menuItemNew);
 		
 //		// Open
-//		// MM: to do: add click actions
+//		// MM: TO DO: add click actions
 //		final JMenuItem menuItemOpen = new JMenuItem("Open");
 //		menuFile.add(menuItemOpen);
 //		
 //		// Save
-//		// MM: to do: add click actions
+//		// MM: TO DO: add click actions
 //		final JMenuItem menuItemSave = new JMenuItem("Save");
 //		menuFile.add(menuItemSave);
 //		
 //		// Help
-//		// MM: to do: add click actions
+//		// MM: TO DO: add click actions
 //		final JMenuItem menuItemHelp = new JMenuItem("Help");
 //		menuFile.add(menuItemHelp);
 		
@@ -141,7 +141,7 @@ public class MainWindow extends JFrame {
 		menuEdit.add(menuItemRefresh);
 		
 //		// Change to...
-//		// MM: to do: add click actions
+//		// MM: TO DO: add click actions
 //		final JMenuItem menuItemChange = new JMenuItem("Change to...");
 //		menuEdit.add(menuItemChange);
 	}
