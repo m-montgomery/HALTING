@@ -96,11 +96,8 @@ public class StateGraphicsManager extends JPanel {
 				// determine if state points to itself in this transition
 				boolean circular = sourceState.getID() == targetState.getID();
 
-				// draw the arrow
-				drawArrow(source, target, angle, circular, g);
-
-				// draw the transition input
-				drawInput(source, entry.getValue(), angle, circular, g);
+				// draw the arrow and input
+				drawArrow(source, target, entry.getValue(), angle, circular, g);
 			}
 		}
 	}
@@ -146,18 +143,25 @@ public class StateGraphicsManager extends JPanel {
 					s.diameter - dx*2, s.diameter - dx*2);
 
 		// draw state name
-		g.setColor(s.getBorderColor());  
-		g.drawString(s.getName(), s.x - (s.diameter/6), s.y + (s.diameter/10));
-		// MM: TO DO: will need to find better way to position this ^
-		//            based on length of state name
+		g.setColor(s.getBorderColor());
+		int x = s.x - (s.diameter/6) - (3 * (s.getName().length()-2));
+		int y = s.y + (s.diameter/10);
+		g.drawString(s.getName(), x, y);
 	}
 
 	private void drawArrow(StateGraphic source, StateGraphic target,
+			ArrayList<String> allInputs,
 			double angle, boolean selfPointing, Graphics g) {
 
 		// save current graphics coordinate system
 		Graphics2D g2d = (Graphics2D) g;
 		AffineTransform origTransform = g2d.getTransform();
+
+		// build input string (comma-delimited if multiple transitions)
+		String fullInput = "";
+		for (int i = 0; i < allInputs.size() - 1; i++)
+			fullInput = fullInput.concat(allInputs.get(i)).concat(", ");
+		fullInput = fullInput.concat(allInputs.get(allInputs.size() - 1));
 
 		// special case if pointing to self
 		if (selfPointing) {
@@ -182,6 +186,12 @@ public class StateGraphicsManager extends JPanel {
 
 	        // reset coordinate system
 			g2d.setTransform(origTransform);
+			
+			// draw input
+			// draw input on top of circular arrow
+			int x = source.getX() - 3 * fullInput.length();
+			int y = source.getY() - source.getDiameter();
+			g.drawString(fullInput, x, y);			
 			return;
 		}
 				
@@ -214,32 +224,11 @@ public class StateGraphicsManager extends JPanel {
 
         // reset coordinate system
 		g2d.setTransform(origTransform);
-	}
-
-	private void drawInput(StateGraphic source, ArrayList<String> allInputs,
-			double angle, boolean selfPointing, Graphics g) {
-		
-		// build input string (comma-delimited if multiple transitions)
-		String fullInput = "";
-		for (int i = 0; i < allInputs.size() - 1; i++)
-			fullInput = fullInput.concat(allInputs.get(i)).concat(", ");
-		fullInput = fullInput.concat(allInputs.get(allInputs.size() - 1));
-
-		// special case if pointing to self
-		if (selfPointing) {
-			
-			// draw input on top of circular arrow
-			int x = source.getX() - 3*fullInput.length();
-			int y = source.getY() - source.getDiameter();
-			g.drawString(fullInput, x, y);
-			return;
-		}
 		
 		// calculate coordinates for input at 0 degree arrow (-->)
 		double bx, by, cx, cy;
-		int offset = 4;
-		bx = source.x + source.diameter/2;   // shift over by radius
-		by = source.y + 2*source.diameter/5; // shift over and down slightly
+		bx = source.getX() + radius1 + arrowLength / 2;  // arrow center
+		by = source.getY() + 15;                         // below arrow shaft
 		// (string is drawn using x,y coordinates of bottom-left corner)
 
 		// rotate the 0 degree coords around circle at angle of arrow
@@ -248,13 +237,7 @@ public class StateGraphicsManager extends JPanel {
 		cy = Math.sin(angle) * (bx - source.x) + 
 				Math.cos(angle) * (by - source.y) + source.y + offset;
 
-		// adjust horizontal location for longer strings
-		double deg = Math.toDegrees(angle);
-		if ((deg >= 45 && deg <= 180) || (deg > -180 && deg < -135))
-			cx -= 5*(fullInput.length()-1);
-		// MM: ^ this works when there's only 2 or 3 transitions;
-		//       need to find a better solution for general case
-
+		// draw the input
 		g.drawString(fullInput, (int)cx, (int)cy);
 	}
 
