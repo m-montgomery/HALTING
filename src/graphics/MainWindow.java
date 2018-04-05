@@ -10,6 +10,8 @@ import javax.swing.JScrollPane;
 import automata.Automaton;
 import automata.NoStartStateDefined;
 import automata.NoTransitionDefined;
+import automata.State;
+import automata.Transition;
 
 import java.awt.GridLayout;
 import javax.swing.JLabel;
@@ -17,10 +19,24 @@ import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 
 import javax.swing.JSplitPane;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.text.StyleContext;
@@ -44,6 +60,8 @@ public class MainWindow extends JFrame {
 	private String machineType = "DFA";             // (default is DFA)
 	private JLabel lblStatus;                       // label for machine status
 	private String machineStatus = Automaton.READY; // (default is Ready)
+	
+	static final String VERIFY_STRING = "HALTING Automaton Save File";
 	
 	//private JTextArea inputText;                    // text area for input
 	private JTextPane inputText;                    // text area for input
@@ -103,16 +121,76 @@ public class MainWindow extends JFrame {
 		});
 		menuFile.add(menuItemNew);
 		
-//		// Open
-//		// MM: TO DO: add click actions
-//		final JMenuItem menuItemOpen = new JMenuItem("Open");
-//		menuFile.add(menuItemOpen);
-//		
-//		// Save
-//		// MM: TO DO: add click actions
-//		final JMenuItem menuItemSave = new JMenuItem("Save");
-//		menuFile.add(menuItemSave);
-//		
+		// Open
+		final JMenuItem menuItemOpen = new JMenuItem(new AbstractAction("Open") {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+
+				// open a file dialog window
+				JFileChooser chooser = new JFileChooser();
+				int choice = chooser.showOpenDialog(MainWindow.this);  // MM: ?
+				if (choice != JFileChooser.APPROVE_OPTION)
+					return;
+				
+				// get name of file to open
+				String filename = chooser.getSelectedFile().getAbsolutePath();
+				
+				// attempt to read from file
+				if (readFromFile(filename)) {
+					update();
+				}
+//				else {
+//					// warn the user about the failure // MM: TO DO
+//				}
+			}
+		});
+		menuFile.add(menuItemOpen);
+		
+		// Save
+		// MM: TO DO: add click actions
+		final JMenuItem menuItemSave = new JMenuItem(new AbstractAction("Save") {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+
+				// open a file dialog window
+				JFileChooser chooser = new JFileChooser();
+				int choice = chooser.showSaveDialog(MainWindow.this);  // MM: ?
+				if (choice != JFileChooser.APPROVE_OPTION)
+					return;
+				
+				// MM: TO DO: restrict to specific extension
+				
+				// get name of file to open
+				File file = chooser.getSelectedFile();
+				String filename = file.getAbsolutePath();
+
+				// attempt to output automaton to file
+				if (outputToFile(filename)) {
+					
+					// delete the original (if overwriting)
+					if (file.exists()) {
+						try {
+							Files.delete(file.toPath());
+						} 
+						catch (IOException x) {
+						    // report file permissions error // MM: TO DO
+						    System.err.println(x);
+						}
+					}
+					
+					// rename the tmp file
+					File newFile = new File(filename + ".tmp");
+					if (!newFile.renameTo(file))
+						// report error renaming // MM: TO DO
+						System.out.println("Could not rename file.");
+				}
+//				else {
+//					// warn the user about the failure to output to file // MM: TO DO
+//				}
+			}
+		});
+		menuFile.add(menuItemSave);
+		
 //		// Help
 //		// MM: TO DO: add click actions
 //		final JMenuItem menuItemHelp = new JMenuItem("Help");
@@ -346,5 +424,141 @@ public class MainWindow extends JFrame {
 	private void reportException(Exception e) {
 		JOptionPane.showMessageDialog(null,
 				e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+	}
+
+	private boolean outputToFile(String filename) {
+
+		try {
+			BufferedWriter writer = new BufferedWriter(
+					new FileWriter(filename+".tmp"));   // output to temp file
+			writer.write(VERIFY_STRING + "\n");
+			
+			// output automata info
+			writer.write(machine.getName() + "\n");
+			writer.write(machine.getType() + "\n");
+			
+			// output state info
+			for (State state : machine.getStates()) {
+				writer.write("STATE\n");
+				writer.write(state.getName() + "\n");
+				writer.write(state.isAccept() + " " + state.isStart() + " " + 
+				             state.getID() + "\n");
+				
+				// output transitions
+				for (Transition t : state.getTransitions())
+					writer.write(t.getID() + " " + t.getInput() + " " + 
+				                 t.getNext().getID() + "\n");
+			}
+
+			writer.close();
+		}
+	
+		// if file output errors, report failure
+		catch (IOException e) {
+			return false;
+		}
+		
+		// report success
+		return true;
+	}
+	
+	private boolean readFromFile(String filename) {
+		
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(filename));
+			ArrayList<String> lines = new ArrayList<String>();
+			
+			// confirm valid automaton file
+			String line = reader.readLine();
+			if (! line.equals(VERIFY_STRING)) {
+				// report error // MM: TO DO
+				reader.close();
+				return false;
+			}
+
+			// read all lines into list
+			while ((line = reader.readLine()) != null)
+				lines.add(line);
+			reader.close();
+			
+			// DEBUG
+			for (String line2 : lines)
+				GraphicsTest.debug(line2);
+			
+			// get automata info
+			String name = lines.get(0);
+			String type = lines.get(1);
+			State startState = null;
+			
+			// DEBUG
+//			System.out.println("name: " + name);
+//			System.out.println("type: " + type);
+			
+			// get state info
+			ArrayList<State> states = new ArrayList<State>();
+			for (int i = 3; i < lines.size(); ) {
+				
+				// extract info from line
+				String stateName = lines.get(i++);
+				System.out.println("\nstate name: " + stateName); // debug
+				String[] stateInfo = lines.get(i++).split(" ");
+				boolean isAccept = Boolean.valueOf(stateInfo[0]);  // MM: TO DO: check for ValueError for these?
+				boolean isStart = Boolean.valueOf(stateInfo[1]);
+				int stateID = Integer.valueOf(stateInfo[2]);
+				System.out.println("state ID: " + stateID); // debug
+				
+				// get transition info
+				ArrayList<Transition> transitions = new ArrayList<Transition>();
+				for (String curr = null; 
+						i < lines.size() && ! (curr = lines.get(i)).equals("STATE"); 
+						i++) {
+					
+					// extract info from line
+					String[] info = curr.split(" ");
+					int ID = Integer.valueOf(info[0]);
+					String input = info[1];
+					int nextID = Integer.valueOf(info[2]); // save next's ID
+					// ^ (since the states haven't all been made yet)
+					
+					// add a new transition to the list
+					transitions.add(new Transition(input, nextID, ID));
+				}
+				
+				// add a new state to the list
+				State newState = new State(stateName, isAccept, isStart, stateID, transitions);
+				states.add(newState);
+				if (isStart)
+					startState = newState;
+				i++;
+			}
+			
+			// make the automaton
+			Automaton machine = new Automaton(name, type, states);
+			if (startState != null)
+				machine.setStart(startState);
+			addAutomaton(machine);             // set as program machine
+
+			// point all state transitions to actual state objects
+			for (State state : machine.getStates()) {
+				for (Transition t : state.getTransitions()) {
+					State next = machine.getStateWithID(t.getNextID());
+					if (next != null)
+						t.setNext(next);
+				}
+			}
+			
+			
+		} 
+		catch (FileNotFoundException e) {
+			// report error // MM: TO DO
+			return false;
+		} 
+		catch (IOException e) {
+			// report error // MM: TO DO
+			return false;
+		}
+		
+		// report success
+		return true;
 	}
 }

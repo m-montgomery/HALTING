@@ -40,8 +40,8 @@ public class GraphicsTest {
 			public void run() {
 				try {
 					final MainWindow frame = new MainWindow();
-					frame.addAutomaton(f);
-					frame.update();
+//					frame.addAutomaton(f);
+//					frame.update();
 				} 
 				catch (Exception e) {
 					e.printStackTrace();

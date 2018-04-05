@@ -1,5 +1,8 @@
 package automata;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -31,23 +34,35 @@ public class Automaton {
 	}
 	
 	public Automaton() {
+		name = "Automaton " + Integer.toString(automataCount++);
+		type = "DFA";
 		states = new ArrayList<State>();
+		init();
+	}
+	
+	public Automaton(String n, String t, ArrayList<State> s) {
+		name = n;
+		type = t;
+		states = s;
+		init();
+	}
+	
+	private void init() {
 		history = new ArrayList<State>();
 		startState = currentState = null;
 		input = new ArrayList<String>();
-		inputCount = stepCount = stateCount = 0;
-	
-		name = "Automaton " + Integer.toString(automataCount++);
-		type = "DFA";
+		inputCount = stepCount = 0;
+		stateCount = states.size();
 		status = READY;
 	}
-	
+
 	public String toString() {
 		String s = name;
 		for (State st : states)
 			s += "\n " + st.toString();
 		return s;
 	}
+	
 	
 	String snapshot() {
 		// show name 
@@ -261,6 +276,10 @@ public class Automaton {
 			startState.setStart(false);
 		startState = null;
 	}
+	
+	public State getStartState() {
+		return startState;
+	}
 
 	public boolean hasStateNamed(String name) {
 		return getStateNamed(name) != null;
@@ -269,6 +288,15 @@ public class Automaton {
 	public State getStateNamed(String name) {
 		for (State s : states) {
 			if (s.getName().equals(name))
+				return s;
+		}
+		return null;
+	}
+
+	public State getStateWithID(int ID) {
+		for (State s : states) {
+			//System.out.println("have: " + s.getID() + "; want: " + ID);
+			if (s.getID() == ID)
 				return s;
 		}
 		return null;

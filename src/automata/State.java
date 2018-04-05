@@ -25,6 +25,14 @@ public class State {
 		init();
 	}
 	
+	public State(String n, boolean a, boolean s, int id, ArrayList<Transition> t) {
+		name = n;
+		isAccept = a;
+		isStart = s;
+		ID = id;
+		transitions = t;
+	}
+
 	void init() {
 		transitions = new ArrayList<Transition>();
 		name = "q";
