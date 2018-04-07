@@ -20,7 +20,8 @@ public class GraphicsTest {
 
 		//s0.addTransition("b", s1);
 		s0.addTransition("e", s2);
-//		s0.addTransition("a", s0);
+		s0.addTransition("a", s0);
+		s0.addTransition("b", s0);
 //		s0.addTransition("f", s2);
 //		s0.addTransition("g", s2);
 

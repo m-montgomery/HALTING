@@ -209,7 +209,7 @@ public class StateWindow extends JDialog {
 
 				// make a tracker (listens for changes to input & target state)
 				TransitionTracker tracker = new TransitionTracker(
-						new Transition("", null));
+						new Transition(""));
 
 				// set default target to first state in list
 				// (guaranteed a state exists if accessing a StateWindow)
@@ -349,8 +349,16 @@ public class StateWindow extends JDialog {
 				
 				// build new transition list from remaining trackers
 				ArrayList<Transition> newTransitions = new ArrayList<Transition>();
-				for (TransitionTracker t : transitionTrackers)
+				outer: for (TransitionTracker t : transitionTrackers) {
+					
+					// skip if a repeat transition
+					for (Transition existing : newTransitions) {
+						if (existing.isEqual(t.transition))
+							break outer;
+					}
+					// otherwise, add transition to list
 					newTransitions.add(t.transition);
+				}
 				state.setTransitions(newTransitions);
 			}
 		}

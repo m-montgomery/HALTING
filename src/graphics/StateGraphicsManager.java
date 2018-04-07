@@ -133,11 +133,9 @@ public class StateGraphicsManager extends JPanel {
 		// draw main circle
 		g.setColor(s.getCircleColor());
 		if (s.getState().isAccept())       // wider border for accept states
-			g.fillOval(rectX + dx, rectY + dx,
-					s.diameter - dx*4, s.diameter - dx*4);
-		// MM: TO DO: ^ make the border even wider for accept states, and
-		//              also handle this by changing size of border circle,
-		//              not inner circle like this currently does
+			g.fillOval(rectX + dx*2, rectY + dx*2,
+					s.diameter - dx*6, s.diameter - dx*6);
+		// MM: TO DO: ^ make the border even wider for accept states
 		else
 			g.fillOval(rectX, rectY,
 					s.diameter - dx*2, s.diameter - dx*2);

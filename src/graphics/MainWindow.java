@@ -132,16 +132,27 @@ public class MainWindow extends JFrame {
 				if (choice != JFileChooser.APPROVE_OPTION)
 					return;
 				
-				// get name of file to open
-				String filename = chooser.getSelectedFile().getAbsolutePath();
-				
 				// attempt to read from file
-				if (readFromFile(filename)) {
-					update();
+				String filename = chooser.getSelectedFile().getAbsolutePath();
+				try {
+					Automaton newMachine = readFromFile(filename);
+					
+					// open in a new window unless canvas is blank
+					if (machine.getStates().size() > 0) {
+						MainWindow newFrame = new MainWindow();
+						newFrame.addAutomaton(newMachine);
+						newFrame.setVisible(true);
+					}
+					else {
+						addAutomaton(newMachine);
+						update();
+					}
 				}
-//				else {
-//					// warn the user about the failure // MM: TO DO
-//				}
+				// warn the user about a failure
+				catch (Exception e) {
+					String msg = e.getMessage();
+					reportException(new FileLoadError(msg == null ? filename : msg));
+				}
 			}
 		});
 		menuFile.add(menuItemOpen);
@@ -462,9 +473,9 @@ public class MainWindow extends JFrame {
 		return true;
 	}
 	
-	private boolean readFromFile(String filename) {
+	private Automaton readFromFile(String filename) throws FileNotFoundException, IOException {
 		
-		try {
+//		try {
 			BufferedReader reader = new BufferedReader(new FileReader(filename));
 			ArrayList<String> lines = new ArrayList<String>();
 			
@@ -473,7 +484,7 @@ public class MainWindow extends JFrame {
 			if (! line.equals(VERIFY_STRING)) {
 				// report error // MM: TO DO
 				reader.close();
-				return false;
+				return null;
 			}
 
 			// read all lines into list
@@ -500,12 +511,12 @@ public class MainWindow extends JFrame {
 				
 				// extract info from line
 				String stateName = lines.get(i++);
-				System.out.println("\nstate name: " + stateName); // debug
+				//System.out.println("\nstate name: " + stateName); // debug
 				String[] stateInfo = lines.get(i++).split(" ");
 				boolean isAccept = Boolean.valueOf(stateInfo[0]);  // MM: TO DO: check for ValueError for these?
 				boolean isStart = Boolean.valueOf(stateInfo[1]);
 				int stateID = Integer.valueOf(stateInfo[2]);
-				System.out.println("state ID: " + stateID); // debug
+				//System.out.println("state ID: " + stateID); // debug
 				
 				// get transition info
 				ArrayList<Transition> transitions = new ArrayList<Transition>();
@@ -536,7 +547,6 @@ public class MainWindow extends JFrame {
 			Automaton machine = new Automaton(name, type, states);
 			if (startState != null)
 				machine.setStart(startState);
-			addAutomaton(machine);             // set as program machine
 
 			// point all state transitions to actual state objects
 			for (State state : machine.getStates()) {
@@ -547,18 +557,15 @@ public class MainWindow extends JFrame {
 				}
 			}
 			
-			
-		} 
-		catch (FileNotFoundException e) {
-			// report error // MM: TO DO
-			return false;
-		} 
-		catch (IOException e) {
-			// report error // MM: TO DO
-			return false;
-		}
-		
-		// report success
-		return true;
+			return machine;
+//		} 
+//		catch (FileNotFoundException e) {
+//			reportException(e);
+//			return null;
+//		} 
+//		catch (IOException e) {
+//			reportException(e);
+//			return null;
+//		}
 	}
 }

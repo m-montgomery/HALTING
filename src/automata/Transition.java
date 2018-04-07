@@ -8,6 +8,13 @@ public class Transition {
 	private int ID;               // unique ID assigned by static transitionNumber
 	static int transitionNumber = 0;
 	
+	public Transition(String i) {
+		input = i;
+		next = null;
+		nextID = -1;
+		ID = transitionNumber++;
+	}
+	
 	public Transition(String i, State n) {
 		input = i;
 		next = n;
@@ -52,5 +59,9 @@ public class Transition {
 
 	public void setInput(String text) {
 		input = text;
+	}
+	
+	public boolean isEqual(Transition other) {
+		return nextID == other.getNextID() && input.equals(other.getInput());
 	}
 }
