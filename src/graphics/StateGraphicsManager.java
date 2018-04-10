@@ -60,11 +60,14 @@ public class StateGraphicsManager extends JPanel {
 
 	}
 
-	private void addState(State s, int x, int y) {
-		StateGraphic state = new StateGraphic(s);   // make new StateGraphic
-		state.setLocation(x, y);                    // set its location
-		s.setGraphic(state);                        // set state's StateGraphic
-		stateGraphics.add(state);                   // add graphic to manager
+	private void addState(State state, int x, int y) {
+		StateGraphic stateG = new StateGraphic(state);   // make new graphic
+		stateG.setLocation(x, y);
+		state.setGraphic(stateG);                        // save to state
+		
+		if (state.isStart())                             // select if start
+			stateG.select();
+		stateGraphics.add(stateG);                       // add to manager
 	}
 
 	@Override

@@ -17,6 +17,7 @@ public class Automaton {
 	String status;
 	
 	ArrayList<String> input;
+	String inputString = "";
 	int inputCount;
 	int stepCount;                // separate from input for future epsilon moves
 	int stateCount;
@@ -136,10 +137,11 @@ public class Automaton {
 		}
 	}
 	
-	public void setInput(String inputString) {
+	public void setInput(String newInput) {
 		input.clear();
-		for (int i = 0; i < inputString.length(); i++)
-			input.add(inputString.substring(i, i+1));
+		inputString = newInput;
+		for (int i = 0; i < newInput.length(); i++)
+			input.add(newInput.substring(i, i+1));
 	}
 	
 	public boolean run(String inputString) throws NoStartStateDefined, NoTransitionDefined {
@@ -153,8 +155,6 @@ public class Automaton {
 		if (startState == null) {
 			status = ERROR;
 			throw new NoStartStateDefined();
-//			debug("No start state defined.");
-//			return false;
 		}
 
 		reset();
@@ -180,6 +180,11 @@ public class Automaton {
 		if (startState == null) {
 			status = ERROR;
 			throw new NoStartStateDefined();
+		}
+		// if first step, set current state to start
+		else if (currentState == null) {
+			currentState = startState;
+			history.add(currentState);
 		}
 		
 		status = RUN;
@@ -222,9 +227,7 @@ public class Automaton {
 		stepCount = 0;
 		history.clear();
 		history.add(startState);   // add start state to history
-		currentState = startState;
-		//debug("Reset. Start/current state: " + currentState.getName());
-		
+		currentState = startState;		
 		status = READY;
 	}
 	
@@ -263,10 +266,8 @@ public class Automaton {
 			s.removeTransitionsTo(state);
 			
 			// remove the state itself
-			if (s.getID() == state.getID()) {
-				//debug("Removing state " + state.getName() + " from automaton.");
+			if (s.getID() == state.getID())
 				it.remove();
-			}
 		}		
 	}
 	
@@ -295,13 +296,16 @@ public class Automaton {
 
 	public State getStateWithID(int ID) {
 		for (State s : states) {
-			//System.out.println("have: " + s.getID() + "; want: " + ID);
 			if (s.getID() == ID)
 				return s;
 		}
 		return null;
 	}
 
+	public String getInput() {
+		return inputString;
+	}
+	
 	public String getCurrentInput() {
 		if (inputCount > 0)
 			return input.get(inputCount-1);
