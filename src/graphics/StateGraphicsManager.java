@@ -138,7 +138,6 @@ public class StateGraphicsManager extends JPanel {
 		if (s.getState().isAccept())       // wider border for accept states
 			g.fillOval(rectX + dx*2, rectY + dx*2,
 					s.diameter - dx*6, s.diameter - dx*6);
-		// MM: TO DO: ^ make the border even wider for accept states
 		else
 			g.fillOval(rectX, rectY,
 					s.diameter - dx*2, s.diameter - dx*2);

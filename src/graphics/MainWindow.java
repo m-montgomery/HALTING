@@ -69,6 +69,8 @@ public class MainWindow extends JFrame {
 	// storage information
 	static final String VERIFY_STRING = "HALTING Automaton Save File";
 	static final String EXT = "hlt";  // file extension
+	static final String userManualFilename = "src/resources/UserManual.txt";
+	// MM: TO DO: ^ write user's manual
 	
 	
 	public MainWindow() {
@@ -91,9 +93,9 @@ public class MainWindow extends JFrame {
 		
 		// make graphics display panel (righthand side of splitPanel)
 		graphicManager = new StateGraphicsManager(this);
-		splitPane.setRightComponent(graphicManager);  // MM: don't need scroll?
-		// JScrollPane rightComponent = new JScrollPane(graphicManager);
-		// splitPane.setRightComponent(rightComponent);
+		graphicManager.setPreferredSize(new Dimension(1500, 1000));
+		JScrollPane rightComponent = new JScrollPane(graphicManager);
+		splitPane.setRightComponent(rightComponent);
 		
 		// set default machine
 		addAutomaton(new Automaton());
@@ -213,10 +215,14 @@ public class MainWindow extends JFrame {
 		});
 		menuFile.add(menuItemSave);
 		
-//		// Help
-//		// MM: TO DO: add click actions
-//		final JMenuItem menuItemHelp = new JMenuItem("Help");
-//		menuFile.add(menuItemHelp);
+		// Help
+		final JMenuItem menuItemHelp = new JMenuItem(new AbstractAction("Help") {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				showHelp();
+			}
+		});
+		menuFile.add(menuItemHelp);
 		
 		// Exit
 		final JMenuItem menuItemExit = new JMenuItem(new AbstractAction("Exit") {
@@ -251,6 +257,7 @@ public class MainWindow extends JFrame {
 		// create side bar panel
 		JPanel sidebar = new JPanel();
 		JScrollPane leftComponent = new JScrollPane(sidebar);
+		leftComponent.setMinimumSize(new Dimension(210, 400));
 		splitPane.setLeftComponent(leftComponent);
 		GridBagLayout gbl_sidebar = new GridBagLayout();
 		sidebar.setLayout(gbl_sidebar);
@@ -471,9 +478,9 @@ public class MainWindow extends JFrame {
 			lines.add(line);
 		reader.close();
 
-		// DEBUG
-		for (String line2 : lines)
-			GraphicsTest.debug(line2);
+//		// DEBUG
+//		for (String line2 : lines)
+//			GraphicsTest.debug(line2);
 
 		// get automata info
 		String name = lines.get(0);
@@ -531,5 +538,48 @@ public class MainWindow extends JFrame {
 			}
 		}
 		return machine;
+	}
+	
+	private void showHelp() {
+		
+		// set window basics
+		JFrame helpWindow = new JFrame();
+		helpWindow.setTitle("HALTING Help");
+		helpWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		helpWindow.setBounds(100, 100, 400, 400);
+		//helpWindow.setIconImage(new ImageIcon(imgURL).getImage()); // MM: TO DO: add icon
+		
+		// make text area
+		JTextArea text = new JTextArea();
+		text.setEditable(false);
+		
+		// load text from file
+		BufferedReader reader;
+		try {
+			reader = new BufferedReader(new FileReader(userManualFilename));
+			String line;
+			while ((line = reader.readLine()) != null)
+				text.append(line);
+			reader.close();
+		} 
+		catch (Exception e) {
+			reportException(new FileError("Unable to load user's manual."));
+			helpWindow.dispose();
+			return;
+		}
+		
+		// set up layout
+		helpWindow.setLayout(new GridBagLayout());
+		GridBagConstraints gbc_text = new GridBagConstraints();
+		gbc_text.anchor = GridBagConstraints.CENTER;
+		gbc_text.insets = new Insets(10, 10, 10, 10);
+		gbc_text.gridx = 0;
+		gbc_text.gridy = 0;
+		gbc_text.weighty = 1.0;
+		gbc_text.weightx = 1.0;
+		gbc_text.fill = GridBagConstraints.BOTH;
+		helpWindow.add(text, gbc_text);
+
+		helpWindow.setVisible(true);
 	}
 }

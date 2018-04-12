@@ -9,13 +9,16 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -383,9 +386,7 @@ public class StateWindow extends JDialog {
 			arrow = new JLabel("-->");
 			
 			// make delete button to remove transition
-			btnDelete = new JButton(new AbstractAction("Del") {  
-			//btnDelete = new JButton(new AbstractAction() {
-				// MM: TO DO: make this an icon instead of "Del" - maybe an X 
+			btnDelete = new JButton(new AbstractAction() {
 				@Override
 				public void actionPerformed(ActionEvent ae) {
 					
@@ -409,18 +410,18 @@ public class StateWindow extends JDialog {
 					madeTransitionChange = true;
 				}
 			});
-//			try {
-//				Image img = ImageIO.read(getClass().getResourceAsStream("images/x_icon.png"));
-//				btnDelete.setIcon(new ImageIcon(img));
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-			// MM: TO DO: figure out better file system org
-			//            currently file is just placed in bin/graphics
-			// MM: TO DO: fit button to image
-			// ImageIcon icon = new ImageIcon(getClass().getResource("x_icon.png"));
-			// btnDelete.setIcon(icon);
-//			
+			
+			// set delete button to an 'x' icon
+			try {
+				Image img = ImageIO.read(new File("src/resources/x_icon.png"));			
+				btnDelete.setIcon(new ImageIcon(img));
+				btnDelete.setBorder(BorderFactory.createEmptyBorder());
+				btnDelete.setContentAreaFilled(false);
+			} 
+			catch (Exception e) {
+				btnDelete.setText("Del");
+			}
+
 			// make text field for input
 			inputField = new JTextField(transition.getInput());
 			inputField.setFont(new Font("Monospaced", Font.PLAIN, 14));
