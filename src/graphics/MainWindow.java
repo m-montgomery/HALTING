@@ -26,6 +26,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -36,6 +37,7 @@ import java.util.ArrayList;
 import javax.swing.JSplitPane;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
@@ -69,7 +71,7 @@ public class MainWindow extends JFrame {
 	// storage information
 	static final String VERIFY_STRING = "HALTING Automaton Save File";
 	static final String EXT = "hlt";  // file extension
-	static final String userManualFilename = "src/resources/UserManual.txt";
+	static final String userManualFilename = "src/resources/UserManual.html";
 	// MM: TO DO: ^ write user's manual
 	
 	
@@ -546,21 +548,17 @@ public class MainWindow extends JFrame {
 		JFrame helpWindow = new JFrame();
 		helpWindow.setTitle("HALTING Help");
 		helpWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		helpWindow.setBounds(100, 100, 400, 400);
+		helpWindow.setBounds(100, 100, 500, 600);
 		//helpWindow.setIconImage(new ImageIcon(imgURL).getImage()); // MM: TO DO: add icon
+	
+		// make editor pane
+		JEditorPane editorPane = new JEditorPane();
+		editorPane.setEditable(false);
 		
-		// make text area
-		JTextArea text = new JTextArea();
-		text.setEditable(false);
-		
-		// load text from file
-		BufferedReader reader;
+		// load text with HTML formatting
 		try {
-			reader = new BufferedReader(new FileReader(userManualFilename));
-			String line;
-			while ((line = reader.readLine()) != null)
-				text.append(line);
-			reader.close();
+			URL helpURL = new File(userManualFilename).toURI().toURL();
+			editorPane.setPage(helpURL);
 		} 
 		catch (Exception e) {
 			reportException(new FileError("Unable to load user's manual."));
@@ -568,6 +566,7 @@ public class MainWindow extends JFrame {
 			return;
 		}
 		
+		// MM: TO DO: can just do plain layout & add border to scroll pane?
 		// set up layout
 		helpWindow.setLayout(new GridBagLayout());
 		GridBagConstraints gbc_text = new GridBagConstraints();
@@ -578,8 +577,9 @@ public class MainWindow extends JFrame {
 		gbc_text.weighty = 1.0;
 		gbc_text.weightx = 1.0;
 		gbc_text.fill = GridBagConstraints.BOTH;
-		helpWindow.add(text, gbc_text);
-
+		
+		// add to window and display
+		helpWindow.add(new JScrollPane(editorPane), gbc_text);
 		helpWindow.setVisible(true);
 	}
 }
