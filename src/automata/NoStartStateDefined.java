@@ -1,5 +1,6 @@
 package automata;
 
+@SuppressWarnings("serial")
 public class NoStartStateDefined extends Exception {
 	private String message;
 	

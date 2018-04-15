@@ -4,21 +4,17 @@ import java.awt.Dialog;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -38,9 +34,8 @@ import automata.Automaton;
 import automata.State;
 import automata.Transition;
 
+@SuppressWarnings("serial")
 public class StateWindow extends JDialog {
-
-	private static final long serialVersionUID = 8616821171044495426L;  // MM: necessary?
 
 	private State state;                          // the state
 	private Automaton machine;                    // the entire automaton
@@ -413,8 +408,8 @@ public class StateWindow extends JDialog {
 			
 			// set delete button to an 'x' icon
 			try {
-				Image img = ImageIO.read(new File("src/resources/x_icon.png"));			
-				btnDelete.setIcon(new ImageIcon(img));
+				URL url = StateWindow.class.getResource("/resources/x_icon.png");
+				btnDelete.setIcon(new ImageIcon(url));
 				btnDelete.setBorder(BorderFactory.createEmptyBorder());
 				btnDelete.setContentAreaFilled(false);
 			} 

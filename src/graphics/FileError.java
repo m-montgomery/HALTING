@@ -1,5 +1,6 @@
 package graphics;
 
+@SuppressWarnings("serial")
 public class FileError extends Exception {
 	private String message;
 	

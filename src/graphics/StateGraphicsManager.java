@@ -22,9 +22,8 @@ import automata.Automaton;
 import automata.State;
 import automata.Transition;
 
+@SuppressWarnings("serial")
 public class StateGraphicsManager extends JPanel {
-
-	private static final long serialVersionUID = 5205922192600518812L;
 
 	private ArrayList<StateGraphic> stateGraphics;
 	private MainWindow mainWindow;
@@ -60,7 +59,7 @@ public class StateGraphicsManager extends JPanel {
 
 	}
 
-	private void addState(State state, int x, int y) {
+	public void addState(State state, int x, int y) {
 		StateGraphic stateG = new StateGraphic(state);   // make new graphic
 		stateG.setLocation(x, y);
 		state.setGraphic(stateG);                        // save to state
@@ -406,7 +405,7 @@ public class StateGraphicsManager extends JPanel {
 				public void actionPerformed(ActionEvent ae) {
 
 					// open a new state editing window
-					final StateWindow stateWindow = new StateWindow(s, machine, win);
+					new StateWindow(s, machine, win);
 					mouseListener.clear();
 				}
 			});

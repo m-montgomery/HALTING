@@ -4,7 +4,7 @@
     <title>Help</title>
   </head>
 
-  <body>
+<body>
 
 <h1>About HALTING</h1>
 
@@ -13,7 +13,7 @@
 
 <h1>How to Use HALTING</h1>
 
-<h2>Building a finite automaton:</h2>
+<h2>Building an automaton:</h2>
 <p>To start a new automaton, run the application to open a blank window, or select File > New to open another blank window. Add a new state by clicking on an empty spot on the canvas, which is on the right-hand side of the window. States can be edited or deleted by right-clicking them and selecting Edit or Delete. </p>
 
 <p>When editing a state, a window opens with options to change the state’s name, accept state status (true or false), start state status (true or false - note that an automaton can only have one start state), and transitions. From this window, select Save to close the window and apply any changes to the state, or choose Cancel to discard any changes. </p>
@@ -21,18 +21,22 @@
 <p>You may move states around on the canvas by clicking and dragging them, or by clicking them and then clicking an empty spot on the canvas. Click a selected state again to deselect it. Selected states are indicated by color. </p>
 
 <p>State transitions are marked by arrows pointing from a state to its target state, with the transition’s input character(s) indicated at the arrow midpoints. A state that transitions to itself will have a circular arrow directly above it. </p>
+<br>
 
 <h2>Running an automaton:</h2>
 <p>Enter the input string for the automaton in the text box located in the left-hand sidebar. Once the machine is running, this input cannot be edited until after the machine is reset using the Reset button. Note that a newline is considered a character. </p>
 
-<p>Option 1: Select Run to run the entire input through the automaton; either an error will be reported (e.g. if there is no transition defined from the current state on the current input character) or the final state will be indicated along with the accept status of the input. </p>
+<p>- Option 1: Select Run to run the entire input through the automaton; either an error will be reported (e.g. if there is no transition defined from the current state on the current input character) or the final state will be indicated along with the accept status of the input. </p>
 
-<p>Option 2: Select Step --> to run a single input character through the automaton; the current input character will be indicated beneath the text box, and the current state will be indicated by color. Continue selecting Step --> to consume the input one character at a time. Select Step <-- to take a step backwards, in effect “un-consuming” the most recently consumed input and reverting to the previous state. This process will eventually result in either an error or an indicated final state, as described in Option 1. </p>
-
+<p>- Option 2: Select the Step Forward button (Step <img src="arrow_right.png">) to run a single input character through the automaton; the current input character will be indicated beneath the text box, and the current state will be indicated by color. Continue selecting Step Forward to consume the input one character at a time. Select Step Backward (Step <img src="arrow_left.png">) to take a step backwards, in effect “un-consuming” the most recently consumed input and reverting to the previous state. This process will eventually result in either an error or an indicated final state, as described in Option 1. </p>
+<br>
+																																				    
 <h2>Saving and loading an automaton:</h2>
 <p>Save the current automaton by selecting File > Save. This will open a file explorer where you may select a name and location for the automaton file. HALTING automaton files have the extension .hlt. </p>
 
-<p>Load a previously saved automaton by selecting File > Open. In the file explorer that appears, locate and select the desired .hlt file. This will open that automaton in a new window, or in the current window if no automaton has been built in it. [ TO DO: saving state locations ] </p>
+<p>When saving an automaton, the locations of the states are preserved, meaning you don't need to rearrange the states every time you open a file. </p>
+
+<p>Load a previously saved automaton by selecting File > Open. In the file explorer that appears, locate and select the desired .hlt file. This will open that automaton in a new window, or in the current window if no automaton has been built in it. The states will be automatically placed in their locations from the time of the file saving. </p>
 <br>
 
 
@@ -50,7 +54,7 @@
 </ul>
 <br>
 
-<h1>Problems, Questions, and Suggestions</h1>
+<h1>Problems and Questions</h1>
 
 <p>Is something not working correctly? Do you have a feature request? Contact the developer by submitting an issue for the project’s Github at https://github.com/m-montgomery/HALTING.</p>
 <br>

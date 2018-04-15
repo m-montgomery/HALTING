@@ -1,7 +1,6 @@
 package graphics;
 
 import java.awt.Dimension;
-import java.awt.Font;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -14,6 +13,7 @@ import automata.State;
 import automata.Transition;
 
 import java.awt.GridLayout;
+
 import javax.swing.JLabel;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
@@ -27,34 +27,26 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import javax.swing.JSplitPane;
 import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JTextArea;
-import javax.swing.JTextPane;
+import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.text.StyleContext;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JMenu;
 
+@SuppressWarnings("serial")
 public class MainWindow extends JFrame {
-
-	private static final long serialVersionUID = -7929001871259770152L;  // MM: auto-generated; necessary?
 	
 	// the main backend components
 	private Automaton machine;                      // the automaton
@@ -69,10 +61,9 @@ public class MainWindow extends JFrame {
 	private JTextArea inputText;                    // text area for input
 
 	// storage information
+	static final String EXT = "hlt";                // file extension
 	static final String VERIFY_STRING = "HALTING Automaton Save File";
-	static final String EXT = "hlt";  // file extension
 	static final String userManualFilename = "src/resources/UserManual.html";
-	// MM: TO DO: ^ write user's manual
 	
 	
 	public MainWindow() {
@@ -123,7 +114,6 @@ public class MainWindow extends JFrame {
 			public void actionPerformed(ActionEvent ae) {
 				MainWindow newFrame = new MainWindow();
 				newFrame.addAutomaton(new Automaton());
-				newFrame.setVisible(true);
 			}			
 		});
 		menuFile.add(menuItemNew);
@@ -144,18 +134,7 @@ public class MainWindow extends JFrame {
 				// attempt to read from file
 				String filename = chooser.getSelectedFile().getAbsolutePath();
 				try {
-					Automaton newMachine = readFromFile(filename);
-					
-					// open in a new window unless canvas is blank
-					if (machine.getStates().size() > 0) {
-						MainWindow newFrame = new MainWindow();
-						newFrame.addAutomaton(newMachine);
-						newFrame.setVisible(true);
-					}
-					else {
-						addAutomaton(newMachine);
-						update();
-					}
+					readFromFile(filename);
 				}
 				// warn the user about a failure
 				catch (Exception e) {
@@ -247,11 +226,6 @@ public class MainWindow extends JFrame {
 			}			
 		});
 		menuEdit.add(menuItemRefresh);
-		
-//		// Change to...
-//		// MM: TO DO: add click actions
-//		final JMenuItem menuItemChange = new JMenuItem("Change to...");
-//		menuEdit.add(menuItemChange);
 	}
 	
 	private void initSideBar(JSplitPane splitPane) {
@@ -272,8 +246,8 @@ public class MainWindow extends JFrame {
 		gbc_sidebar.gridy = 0;
 		
 		// init step buttons here so other buttons can reference them
-		final JButton btnStepBack = new JButton("<-- Step");
-		final JButton btnStepForward = new JButton("Step -->");;
+		final JButton btnStepBack = new JButton("Step");
+		final JButton btnStepForward = new JButton("Step");;
 		
 		// run button
 		final JButton btnRun = new JButton(new AbstractAction("Run") {
@@ -312,9 +286,17 @@ public class MainWindow extends JFrame {
 		gbc_sidebar.gridx++;
 		sidebar.add(btnReset, gbc_sidebar);
 		
-		// step back button
-		// initialized first (above, so btnReset can use it), now add action;
-		// otherwise, reference to self in btnStepBack.setEnabled causes error
+		// step back button:
+		// add arrow icon (Hamilton Continental blue)
+		try {
+			URL url = MainWindow.class.getResource("/resources/arrow_left.png");
+			btnStepBack.setIcon(new ImageIcon(url));
+			btnStepBack.setHorizontalTextPosition(SwingConstants.TRAILING);
+		} 
+		catch (Exception e) {
+			btnStepBack.setText("<-- Step");
+		}
+		// add button action
 		btnStepBack.addActionListener(new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
@@ -338,8 +320,17 @@ public class MainWindow extends JFrame {
 		gbc_sidebar.gridy++;
 		sidebar.add(btnStepBack, gbc_sidebar);
 		
-		// step forward button
-		//final JButton btnStepForward = new JButton(new AbstractAction("Step -->") {
+		// step forward button:
+		// add arrow icon (Hamilton Continental blue)
+		try {
+			URL url = MainWindow.class.getResource("/resources/arrow_right.png");
+			btnStepForward.setIcon(new ImageIcon(url));
+			btnStepForward.setHorizontalTextPosition(SwingConstants.LEADING);
+		} 
+		catch (Exception e) {
+			btnStepForward.setText("Step -->");
+		}
+		// add button action
 		btnStepForward.addActionListener(new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
@@ -409,10 +400,14 @@ public class MainWindow extends JFrame {
 		sidebar.add(lblType, gbc_sidebar);
 	}
 
-	public void addAutomaton(Automaton auto) {
+	private void addAutomaton(Automaton auto) {
 		machine = auto;
 		graphicManager.addAutomaton(machine);
-		graphicManager.createStates(machine.getStates()); // make StateGraphics
+		update();
+	}
+	
+	private void addStateGraphic(State s, int x, int y) {
+		graphicManager.addState(s, x, y);
 	}
 	
 	public void update() {
@@ -453,7 +448,8 @@ public class MainWindow extends JFrame {
 			writer.write("STATE\n");
 			writer.write(state.getName() + "\n");
 			writer.write(state.isAccept() + " " + state.isStart() + " " + 
-					state.getID() + "\n");
+					state.getID() + " " + state.getGraphic().getX() + " " + 
+					state.getGraphic().getY() + "\n");
 
 			// output transitions
 			for (Transition t : state.getTransitions())
@@ -463,26 +459,31 @@ public class MainWindow extends JFrame {
 		writer.close();
 	}
 
-	private Automaton readFromFile(String filename) throws FileNotFoundException, IOException, FileError {
+	private void readFromFile(String filename) throws FileNotFoundException, IOException, FileError {
 
 		BufferedReader reader = new BufferedReader(new FileReader(filename));
 		ArrayList<String> lines = new ArrayList<String>();
+		
+		// set up new window if canvas is not blank
+		boolean usingNewWindow = machine.getStates().size() > 0;
+		MainWindow newFrame = null;
+		if (usingNewWindow) {
+			newFrame = new MainWindow();
+			newFrame.setVisible(false);    // don't show yet
+		}
 
 		// confirm valid automaton file
 		String line = reader.readLine();
 		if (! line.equals(VERIFY_STRING)) {
 			reader.close();
-			throw new FileError(filename, "This does not appear to be a valid HALTING file.");
+			throw new FileError(filename, 
+					"This does not appear to be a valid HALTING file.");
 		}
 
 		// read all lines into list
 		while ((line = reader.readLine()) != null)
 			lines.add(line);
 		reader.close();
-
-//		// DEBUG
-//		for (String line2 : lines)
-//			GraphicsTest.debug(line2);
 
 		// get automata info
 		String name = lines.get(0);
@@ -491,14 +492,16 @@ public class MainWindow extends JFrame {
 
 		// get state info
 		ArrayList<State> states = new ArrayList<State>();
-		for (int i = 3; i < lines.size(); ) {
+		for (int i = 3; i < lines.size(); i++) {
 
 			// extract info from line
-			String stateName = lines.get(i++);
+			String stateName = lines.get(i++);                 // name
 			String[] stateInfo = lines.get(i++).split(" ");
-			boolean isAccept = Boolean.valueOf(stateInfo[0]);
-			boolean isStart = Boolean.valueOf(stateInfo[1]);
-			int stateID = Integer.valueOf(stateInfo[2]);
+			boolean isAccept = Boolean.valueOf(stateInfo[0]);  // accept?
+			boolean isStart = Boolean.valueOf(stateInfo[1]);   // start?
+			int stateID = Integer.valueOf(stateInfo[2]);       // ID number
+			int stateX = Integer.valueOf(stateInfo[3]);        // x-coordinate
+			int stateY = Integer.valueOf(stateInfo[4]);        // y-coordinate
 
 			// get transition info
 			ArrayList<Transition> transitions = new ArrayList<Transition>();
@@ -523,23 +526,35 @@ public class MainWindow extends JFrame {
 			states.add(newState);
 			if (isStart)
 				startState = newState;
-			i++;
+			
+			// make a state graphic
+			if (usingNewWindow)
+				newFrame.addStateGraphic(newState, stateX, stateY);
+			else
+				graphicManager.addState(newState, stateX, stateY);
 		}
 
 		// make the automaton
-		Automaton machine = new Automaton(name, type, states);
+		Automaton newMachine = new Automaton(name, type, states);
 		if (startState != null)
-			machine.setStart(startState);
+			newMachine.setStart(startState);
 
 		// point all state transitions to actual state objects
-		for (State state : machine.getStates()) {
+		for (State state : newMachine.getStates()) {
 			for (Transition t : state.getTransitions()) {
-				State next = machine.getStateWithID(t.getNextID());
+				State next = newMachine.getStateWithID(t.getNextID());
 				if (next != null)
 					t.setNext(next);
 			}
 		}
-		return machine;
+		
+		// open in a new window unless canvas is blank
+		if (usingNewWindow) {
+			newFrame.addAutomaton(newMachine);
+			newFrame.setVisible(true);
+		}
+		else
+			addAutomaton(newMachine);
 	}
 	
 	private void showHelp() {
@@ -566,20 +581,9 @@ public class MainWindow extends JFrame {
 			return;
 		}
 		
-		// MM: TO DO: can just do plain layout & add border to scroll pane?
-		// set up layout
-		helpWindow.setLayout(new GridBagLayout());
-		GridBagConstraints gbc_text = new GridBagConstraints();
-		gbc_text.anchor = GridBagConstraints.CENTER;
-		gbc_text.insets = new Insets(10, 10, 10, 10);
-		gbc_text.gridx = 0;
-		gbc_text.gridy = 0;
-		gbc_text.weighty = 1.0;
-		gbc_text.weightx = 1.0;
-		gbc_text.fill = GridBagConstraints.BOTH;
-		
 		// add to window and display
-		helpWindow.add(new JScrollPane(editorPane), gbc_text);
+		editorPane.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+		helpWindow.add(new JScrollPane(editorPane));
 		helpWindow.setVisible(true);
 	}
 }

@@ -1,8 +1,5 @@
 package automata;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -29,10 +26,6 @@ public class Automaton {
 	public static final String ERROR = "Error";
 	public static final String REJECT = "Rejected";
 	public static final String RUN = "Running";
-	
-	public static void debug(String s) {  // DEBUG
-		System.out.println(s);
-	}
 	
 	public Automaton() {
 		name = "Automaton " + Integer.toString(automataCount++);
