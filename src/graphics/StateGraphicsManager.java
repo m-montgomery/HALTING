@@ -106,15 +106,12 @@ public class StateGraphicsManager extends JPanel {
 
 	private void drawState(StateGraphic s, Graphics g) {
 
-		// update selected state if any
-		if (machine.getCurrentState() == s.getState()) {
-
-			// deselect previous state
-			if (currentState != null)
-				currentState.deselect();
-			currentState = s; 
+		// update current state
+		State curr = machine.getCurrentState();
+		if (curr != null && curr.getID() == s.getState().getID()) {
 
 			// update current state status
+			currentState = s; 
 			if (machine.getStatus() == Automaton.ACCEPT)
 				currentState.accept();
 			else if (machine.getStatus() == Automaton.REJECT)
@@ -122,6 +119,9 @@ public class StateGraphicsManager extends JPanel {
 			else
 				currentState.select();
 		}
+		// ensure other states are deselected
+		else
+			s.deselect();
 
 		// calculate bounding rectangle upperleft coords
 		int rectX = s.x - s.diameter/2;    // s.x, s.y are center coords
@@ -362,9 +362,16 @@ public class StateGraphicsManager extends JPanel {
 
 				// if right-clicked on a state, show options menu
 				if (SwingUtilities.isRightMouseButton(me)) {
-					final DropDown stateMenu = new DropDown(
-							state, machine, mainWindow);
-					stateMenu.show(me.getComponent(), me.getX(), me.getY());
+					
+					if (machine.getStatus().equals(Automaton.READY)) {
+						final DropDown stateMenu = new DropDown(
+								state, machine, mainWindow);
+						stateMenu.show(me.getComponent(), me.getX(), me.getY());
+					}
+					else
+						JOptionPane.showMessageDialog(null,
+							"Cannot edit or delete states while the machine is running.", 
+							"Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 

@@ -337,17 +337,26 @@ public class MainWindow extends JFrame {
 		btnStepForward.addActionListener(new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
-				graphicManager.clearStates();                // clear selections
-				if (machine.atStart()) {                     // if 1st step:
-					machine.setInput(inputText.getText());    // set input
-					inputText.setEditable(false);             // disable input edit
-					btnRun.setEnabled(false);                 // disable run btn
-				}
+
+				// if first step, set input
+				if (machine.atStart())
+					machine.setInput(inputText.getText());
+				
 				try { 
 					machine.step();                          // take a step
-					btnStepBack.setEnabled(true);            // enable step back
-					lblCurrentInput.setText("Just read: " + 
-					                        machine.getCurrentInput());
+					
+					// if there is input
+					if (inputText.getText().length() > 0) {
+						inputText.setEditable(false);        // disable input edit
+						btnRun.setEnabled(false);            // disable run
+						btnStepBack.setEnabled(true);        // enable step back
+
+						// report character just read
+						lblCurrentInput.setText("Just read: " + 
+						                        machine.getCurrentInput());
+					}
+
+					// if end of input, disable step forward
 					if (! (machine.getStatus().equals(Automaton.READY) ||
 							machine.getStatus().equals(Automaton.RUN)))
 						btnStepForward.setEnabled(false);

@@ -16,7 +16,7 @@ public class Automaton {
 	ArrayList<String> input;
 	String inputString = "";
 	int inputCount;
-	int stepCount;                // separate from input for future epsilon moves
+	int stepCount;
 	int stateCount;
 	
 	static int automataCount = 0;
@@ -166,7 +166,7 @@ public class Automaton {
 	public void step() throws NoTransitionDefined, NoStartStateDefined {
 		
 		// don't continue past input
-		if (inputCount >= input.size())   // MM: but what about epsilon moves after input?
+		if (inputCount >= input.size())
 			return;
 		
 		// assert there is a start state
@@ -247,6 +247,7 @@ public class Automaton {
 				startState = s;
 			}
 		}
+		reset();
 	}
 	
 	public void removeState(State state) {
@@ -269,6 +270,7 @@ public class Automaton {
 		if (startState != null)
 			startState.setStart(false);
 		startState = null;
+		reset();
 	}
 	
 	public State getStartState() {
