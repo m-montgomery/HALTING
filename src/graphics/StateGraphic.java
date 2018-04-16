@@ -4,10 +4,9 @@ import java.awt.Color;
 import javax.swing.JComponent;
 import automata.State;
 
+@SuppressWarnings("serial")
 public class StateGraphic extends JComponent {
 
-	private static final long serialVersionUID = 1L;
-	
 	public int x;              // center coordinates
 	public int y;
 	public int diameter;       // including border

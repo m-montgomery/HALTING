@@ -73,7 +73,10 @@ public class MainWindow extends JFrame {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 750, 400);
 		setLocationByPlatform(true);
-		//frame.setIconImage(new ImageIcon(imgURL).getImage()); // MM: TO DO: add icon
+		
+		// set icon
+		URL url = MainWindow.class.getResource("/resources/h.png");
+		setIconImage(new ImageIcon(url).getImage());
 		
 		// init content containers
 		getContentPane().setLayout(new GridLayout(0, 1, 0, 0));
