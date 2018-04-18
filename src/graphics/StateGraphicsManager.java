@@ -385,7 +385,7 @@ public class StateGraphicsManager extends JPanel {
 				// if have a clicked state, relocate to mouse position
 				if (clickedState != null)
 					clickedState.setLocation(me.getX(), me.getY());
-
+				
 				// otherwise, make a new state at mouse position
 				else {
 					State newState = new State();

@@ -38,6 +38,12 @@ public class Automaton {
 		name = n;
 		type = t;
 		states = s;
+		
+		// update static counts for unique ID assignment
+		State.stateNumber += states.size();
+		for (State myState : states)
+			Transition.transitionNumber += myState.getTransitions().size();
+		
 		init();
 	}
 	
@@ -253,7 +259,7 @@ public class Automaton {
 	public void removeState(State state) {
 		
 		// check every state
-		for (Iterator<State> it = states.iterator(); it.hasNext();) {
+		for (Iterator<State> it = states.iterator(); it.hasNext(); ) {
 			State s = it.next();
 			
 			// remove references to the state (transitions)
