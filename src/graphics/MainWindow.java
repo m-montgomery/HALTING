@@ -63,7 +63,8 @@ public class MainWindow extends JFrame {
 	// storage information
 	static final String EXT = "hlt";                // file extension
 	static final String VERIFY_STRING = "HALTING Automaton Save File";
-	static final String userManualFilename = "src/resources/UserManual.html";
+	static final String userManualFilename = "/resources/UserManual.html";
+	static final String iconFilename = "/resources/h.png";
 	
 	
 	public MainWindow() {
@@ -75,7 +76,7 @@ public class MainWindow extends JFrame {
 		setLocationByPlatform(true);
 		
 		// set icon
-		URL url = MainWindow.class.getResource("/resources/h.png");
+		URL url = MainWindow.class.getResource(iconFilename);
 		setIconImage(new ImageIcon(url).getImage());
 		
 		// init content containers
@@ -576,7 +577,10 @@ public class MainWindow extends JFrame {
 		helpWindow.setTitle("HALTING Help");
 		helpWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		helpWindow.setBounds(100, 100, 500, 600);
-		//helpWindow.setIconImage(new ImageIcon(imgURL).getImage()); // MM: TO DO: add icon
+		
+		// set icon
+		URL url = MainWindow.class.getResource(iconFilename);
+		helpWindow.setIconImage(new ImageIcon(url).getImage());
 	
 		// make editor pane
 		JEditorPane editorPane = new JEditorPane();
@@ -584,7 +588,7 @@ public class MainWindow extends JFrame {
 		
 		// load text with HTML formatting
 		try {
-			URL helpURL = new File(userManualFilename).toURI().toURL();
+			URL helpURL = MainWindow.class.getResource(userManualFilename);
 			editorPane.setPage(helpURL);
 		} 
 		catch (Exception e) {
