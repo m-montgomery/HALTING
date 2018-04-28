@@ -576,7 +576,7 @@ public class MainWindow extends JFrame {
 		JFrame helpWindow = new JFrame();
 		helpWindow.setTitle("HALTING Help");
 		helpWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		helpWindow.setBounds(100, 100, 500, 600);
+		helpWindow.setBounds(100, 100, 800, 600);
 		
 		// set icon
 		URL url = MainWindow.class.getResource(iconFilename);

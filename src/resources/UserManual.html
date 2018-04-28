@@ -14,55 +14,87 @@
 <h1>How to Use HALTING</h1>
 
 <h2>Running the application:</h2>
-<p>HALTING is currently packaged as a runnable JAR file named HALTING.jar. Just double-click the file to run. You may need to grant executable permissions; you should be prompted with a pop-up window on Windows or Mac OS, whereas on Linux you may need to set this in a terminal (try <code>chmod a+x HALTING.jar</code>). </p>
-
-<p>Alternatively, you can run <code>java -jar HALTING.jar</code> in a terminal to run the application. </p>
+<p>HALTING is currently packaged as a runnable JAR file named HALTING.jar. Just double-click the file to run. You may need to grant executable permissions; you should be prompted with a pop-up window on Windows or Mac OS, whereas on Linux you may need to set this in a terminal (try <code>chmod a+x HALTING.jar</code>). Alternatively, you can enter <code>java -jar HALTING.jar</code> in a terminal to run the application. </p>
 <br>
 
 <h2>Building an automaton:</h2>
-<p>To start a new automaton, run the application to open a blank window, or select File > New to open another blank window. Add a new state by clicking on an empty spot on the canvas, which is on the right-hand side of the window. States can be edited or deleted by right-clicking them and selecting Edit or Delete. </p>
+<p>To start a new automaton, run the application to open a blank window, or select File > New to open another blank window. </p>
+<br>
+<img src="UserManualImages/New_Window.png">
+<br>
 
-<p>When editing a state, a window opens with options to change the state’s name, accept state status (true or false), start state status (true or false - note that an automaton can only have one start state), and transitions. From this window, select Save to close the window and apply any changes to the state, or choose Cancel to discard any changes. </p>
+<p>Add a new state by clicking on an empty spot on the canvas, which is on the right-hand side of the window. You may move states around on the canvas by clicking and dragging them (on a touchpad, double tap and drag), or by clicking them and then clicking an empty spot on the canvas. Click a selected state again to deselect it. Selected states are indicated by color. </p>
 
-<p>You may move states around on the canvas by clicking and dragging them, or by clicking them and then clicking an empty spot on the canvas. Click a selected state again to deselect it. Selected states are indicated by color. </p>
+<p>States can be edited or deleted by right-clicking them and selecting Edit or Delete. </p>
+<br>
+<img src="UserManualImages/Edit_State.png">
+<br>
 
-<p>State transitions are marked by arrows pointing from a state to its target state, with the transition’s input character(s) indicated at the arrow midpoints. A state that transitions to itself will have a circular arrow directly above it. </p>
+<p>When editing a state, a window opens with options to change the state's name, accept state status (true or false), start state status (true or false - note that an automaton can only have one start state), and transitions. From this window, select Save to close the window and apply any changes to the state, or choose Cancel to discard any changes. </p>
+<br>
+<img src="UserManualImages/State_Window.png">
+<br>
+
+<p>Add a new transition by clicking 'Add' to the right of 'Transitions' in the state window, then enter the input character in the text field and select a target state from the dropdown menu. Delete a transition by clicking the X on the left of the transition. </p>
+<br>
+<img src="UserManualImages/State_Window_Transition.png">
+<br>
+
+<p>State transitions are marked by arrows pointing from a state to its target state, with the transition's input character(s) indicated at the arrow midpoints. A state that transitions to itself will have a circular arrow directly above it. </p>
+<br>
+<img src="UserManualImages/State_with_Transition.png">
+<br>
 <br>
 
 <h2>Running an automaton:</h2>
-<p>Enter the input string for the automaton in the text box located in the left-hand sidebar. Once the machine is running, this input cannot be edited until after the machine is reset using the Reset button. Note that a newline is considered a character. </p>
-
-<p>- Option 1: Select Run to run the entire input through the automaton; either an error will be reported (e.g. if there is no transition defined from the current state on the current input character) or the final state will be indicated along with the accept status of the input. </p>
-
-<p>- Option 2: Select the Step Forward button (Step <img src="arrow_right.png">) to run a single input character through the automaton; the current input character will be indicated beneath the text box, and the current state will be indicated by color. Continue selecting Step Forward to consume the input one character at a time. Select Step Backward (Step <img src="arrow_left.png">) to take a step backwards, in effect “un-consuming” the most recently consumed input and reverting to the previous state. This process will eventually result in either an error or an indicated final state, as described in Option 1. </p>
+<p>Enter the input string for the automaton in the text box located in the left-hand sidebar. Once the machine is running, this input cannot be edited until after the machine is reset using the Reset button. Note that a newline is considered a character (i.e. do not enter a newline after the input string). </p>
 <br>
-																																				    
+<img src="UserManualImages/Example_DFA_Input.png">
+<br>
+
+<p>Option 1: Select Run to run the entire input through the automaton; either an error will be reported (e.g. if there is no transition defined from the current state on the current input character) or the final state will be indicated along with the accept status of the input. </p>
+<br>
+<img src="UserManualImages/Example_DFA_Run.png">
+<br>
+
+<p>Option 2: Select the Step Forward button (Step <img src="arrow_right.png">) to run a single input character through the automaton; the current input character will be indicated beneath the text box ("Just read: "), and the current state will be indicated by color. </p>
+<br>
+<img src="UserManualImages/Example_DFA_Step.png">
+<br>
+
+<p>Continue selecting Step Forward to consume the input one character at a time. Select Step Backward (Step <img src="arrow_left.png">) to take a step backwards, in effect "un-consuming" the most recently consumed input and reverting to the previous state. This process will eventually result in either an error or an indicated final state, as described in Option 1. </p>
+<br>
+
 <h2>Saving and loading an automaton:</h2>
-<p>Save the current automaton by selecting File > Save. This will open a file explorer where you may select a name and location for the automaton file. HALTING automaton files have the extension .hlt. </p>
-
-<p>When saving an automaton, the locations of the states are preserved, meaning you don't need to rearrange the states every time you open a file. </p>
-
-<p>Load a previously saved automaton by selecting File > Open. In the file explorer that appears, locate and select the desired .hlt file. This will open that automaton in a new window, or in the current window if no automaton has been built in it. The states will be automatically placed in their locations from the time of the file saving. </p>
+<p>Save the current automaton by selecting File > Save. This will open a file explorer where you may select a name and location for the automaton file. HALTING automaton files have the extension .hlt. When saving an automaton, the locations of the states are preserved, meaning you don't need to rearrange the states every time you open a file. </p>
+<br>
+<img src="UserManualImages/Saving.png">
 <br>
 
+<p>Load a previously saved automaton by selecting File > Open. In the file explorer that appears, locate and select the desired .hlt file. This will open that automaton in a new window, or in the current window if no automaton has been built in it yet. The states will be automatically placed in their locations from the time of the file saving. </p>
+<br>
+<img src="UserManualImages/Loading.png">
+<br>
+<br>
 
 <h1>Future Features</h1>
 
-<p>Although initally developed as an honors thesis project, HALTING will continue to improve beyond graduation. The following are some ideas for possible future work: </p>
+<p>Although initially developed as an honors thesis project, HALTING will continue to improve beyond graduation. The following are some ideas for possible future work: </p>
 
 <ul>
-<li>Implementation for non-deterministic machines (currently only deterministic finite automata are allowed)</li>
+<li>Implementation for non-deterministic machines</li>
 <li>User customization, e.g. font sizes, default file location</li>
-<li>Video / GIF exporting of an automaton running through an input string</li>
+<li>Image exporting of automata / video exporting of automata running through input</li>
 <li>Movable transition arrows; curvable arrows</li>
-<li>More intelligent state auto-placement using graph theory</li>
+<li>Intelligent state auto-placement using graph theory</li>
 <li>Various finite machine related utilities, e.g. conversion from NFA to DFA, DFA state minimization</li>
 </ul>
 <br>
 
 <h1>Problems and Questions</h1>
 
-<p>Is something not working correctly? Do you have a feature request? Contact the developer by submitting an issue for the project’s Github at https://github.com/m-montgomery/HALTING.</p>
+<p>Is something not working correctly? Do you have a feature request? Contact the developer by submitting an issue for the project's Github at https://github.com/m-montgomery/HALTING.</p>
 <br>
-																												 </body>
-																												 </html>
+
+</body>
+</html>
