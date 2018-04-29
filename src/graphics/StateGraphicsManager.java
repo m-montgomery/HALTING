@@ -360,7 +360,7 @@ public class StateGraphicsManager extends JPanel {
 			if (state != null) {
 
 				// if right-clicked on a state, show options menu
-				if (SwingUtilities.isRightMouseButton(me)) {
+				if (SwingUtilities.isRightMouseButton(me) || me.isControlDown()) {
 					
 					if (machine.getStatus().equals(Automaton.READY)) {
 						final DropDown stateMenu = new DropDown(
