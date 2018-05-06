@@ -159,6 +159,10 @@ public class Automaton {
 		reset();
 		status = RUN;
 		
+		// check for empty string
+		if (reachedEndOfInput())
+			status = accepted() ? ACCEPT : REJECT;
+
 		// build input list
 		int totalInput = input.size();
 		
@@ -258,6 +262,10 @@ public class Automaton {
 	
 	public void removeState(State state) {
 		
+		// clear start state if needed
+		if (state.getID() == startState.getID())
+			startState = null;
+		
 		// check every state
 		for (Iterator<State> it = states.iterator(); it.hasNext(); ) {
 			State s = it.next();
@@ -268,7 +276,7 @@ public class Automaton {
 			// remove the state itself
 			if (s.getID() == state.getID())
 				it.remove();
-		}		
+		}
 	}
 	
 	public void removeStart() {
