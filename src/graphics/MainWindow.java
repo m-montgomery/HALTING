@@ -46,7 +46,6 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.plaf.FontUIResource;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -59,16 +58,12 @@ public class MainWindow extends JFrame {
 	private Automaton machine;                      // the automaton
 	private StateGraphicsManager graphicManager;    // the graphical manager
 	
-	// data
+	// properties
 	private float fontSize = 12;
-	private String machineType = "DFA";             // default is DFA
-	private String machineStatus = Automaton.READY; // default is Ready
+	private String machineType = "DFA";
+	private String machineStatus = Automaton.READY;
 	
 	// graphical objects for future access
-	private JMenuBar menuBar;                       // entire menu bar
-	private JMenu menuFile;                         // File menu
-	private JMenu menuEdit;                         // Edit menu
-	private ArrayList<JButton> buttons;             // list of buttons
 	private JLabel lblInput;                        // label that says Input:
 	private JLabel lblType;                         // label for machine type
 	private JLabel lblStatus;                       // label for machine status
@@ -100,7 +95,6 @@ public class MainWindow extends JFrame {
 		add(splitPane);
 		
 		// make option menus, buttons
-		buttons = new ArrayList<JButton>();
 		initMenuBar();
 		initSideBar(splitPane);       // lefthand side of splitPanel
 		
@@ -119,9 +113,9 @@ public class MainWindow extends JFrame {
 	private void initMenuBar() {
 		
 		// MENU BAR //
-		menuBar = new JMenuBar();
-		menuFile = new JMenu("File");
-		menuEdit = new JMenu("Edit");
+		JMenuBar menuBar = new JMenuBar();
+		JMenu menuFile = new JMenu("File");
+		JMenu menuEdit = new JMenu("Edit");
 		menuBar.add(menuFile);
 		menuBar.add(menuEdit);
 		setJMenuBar(menuBar);
@@ -279,8 +273,6 @@ public class MainWindow extends JFrame {
 		// init step buttons here so other buttons can reference them
 		final JButton btnStepBack = new JButton("Step");
 		final JButton btnStepForward = new JButton("Step");
-		buttons.add(btnStepBack);
-		buttons.add(btnStepForward);
 		
 		// run button
 		final JButton btnRun = new JButton(new AbstractAction("Run") {
@@ -299,7 +291,6 @@ public class MainWindow extends JFrame {
 			}
 		});
 		sidebar.add(btnRun, gbc_sidebar);
-		buttons.add(btnRun);
 		
 		// reset button
 		final JButton btnReset = new JButton(new AbstractAction("Reset") {
@@ -319,7 +310,6 @@ public class MainWindow extends JFrame {
 		});
 		gbc_sidebar.gridx++;
 		sidebar.add(btnReset, gbc_sidebar);
-		buttons.add(btnReset);
 		
 		// step back button:
 		// add arrow icon (Hamilton Continental blue)
@@ -476,31 +466,14 @@ public class MainWindow extends JFrame {
 		
 		fontSize = newFontSize;
 		
-		// update menu bar
-		Font newFont = new FontUIResource(menuBar.getFont().getFontName(), 
-				menuBar.getFont().getStyle(), Math.round(fontSize));
-		UIManager.put("Menu.font", newFont);
+		UIManager.put("Menu.font", UIManager.getFont("Menu.font").deriveFont(fontSize));
+		UIManager.put("Label.font", UIManager.getFont("Label.font").deriveFont(fontSize));
+		UIManager.put("Button.font", UIManager.getFont("Button.font").deriveFont(fontSize));
+		UIManager.put("TextArea.font", UIManager.getFont("TextArea.font").deriveFont(fontSize));
+		UIManager.put("MenuItem.font", UIManager.getFont("MenuItem.font").deriveFont(fontSize));
+		UIManager.put("OptionPane.font", UIManager.getFont("OptionPane.font").deriveFont(fontSize));
+		
 		SwingUtilities.updateComponentTreeUI(this);
-		
-		// update menu items
-		for (int i = 0; i < menuFile.getItemCount(); i++) {
-			JMenuItem item = menuFile.getItem(i);
-			item.setFont(item.getFont().deriveFont(fontSize));
-		}
-		for (int i = 0; i < menuEdit.getItemCount(); i++) {
-			JMenuItem item = menuEdit.getItem(i);
-			item.setFont(item.getFont().deriveFont(fontSize));
-		}
-		
-		// update sidebar labels
-		lblInput.setFont(lblInput.getFont().deriveFont(fontSize));
-		lblCurrentInput.setFont(lblCurrentInput.getFont().deriveFont(fontSize));
-		lblType.setFont(lblType.getFont().deriveFont(fontSize));
-		lblStatus.setFont(lblStatus.getFont().deriveFont(fontSize));
-		
-		// update sidebar buttons
-		for (JButton b : buttons)
-			b.setFont(b.getFont().deriveFont(fontSize));
 	}
 	
 	private void reportException(Exception e) {
@@ -546,6 +519,7 @@ public class MainWindow extends JFrame {
 		if (usingNewWindow) {
 			newFrame = new MainWindow();
 			newFrame.setVisible(false);    // don't show yet
+			newFrame.setFontSize(fontSize);
 		}
 
 		// confirm valid automaton file

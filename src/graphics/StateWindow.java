@@ -27,6 +27,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -49,8 +50,9 @@ public class StateWindow extends JDialog {
 	
 	private ArrayList<TransitionTracker> transitionTrackers; // track transitions
 	private JPanel transitionPanel;                          // transition panel
-	private GridBagConstraints gbc_state;           // dropdown state constraints
+	private GridBagConstraints gbc_state;         // dropdown state constraints
 	private GridBagConstraints gbc_input;         // other transition constraints
+	private float fontSize;
 
 	public StateWindow(StateGraphic stateGraphic, Automaton auto, MainWindow window) {
 
@@ -60,6 +62,7 @@ public class StateWindow extends JDialog {
 		state = stateGraphic.getState();
 		machine = auto;
 		mainWindow = window;
+		fontSize = mainWindow.getFontSize();
 
 		// initialize variables for tracking changes
 		isStart = state.isStart();
@@ -72,6 +75,15 @@ public class StateWindow extends JDialog {
 		setBounds(100, 100, 250, 350);
 		setLayout(new GridBagLayout());
 
+		// set font sizes
+		setFont(getFont().deriveFont(fontSize));
+		UIManager.put("Label.font", UIManager.getFont("Label.font").deriveFont(fontSize));
+		UIManager.put("Button.font", UIManager.getFont("Button.font").deriveFont(fontSize));
+		UIManager.put("RadioButton.font", UIManager.getFont("RadioButton.font").deriveFont(fontSize));
+		UIManager.put("ComboBox.font", UIManager.getFont("ComboBox.font").deriveFont(fontSize));
+		UIManager.put("TextField.font", UIManager.getFont("TextField.font").deriveFont(fontSize));
+		UIManager.put("OptionPane.font", UIManager.getFont("OptionPane.font").deriveFont(fontSize));
+		
 		// update main window upon close
 		addWindowListener(new WindowAdapter() {
 			@Override
@@ -104,7 +116,7 @@ public class StateWindow extends JDialog {
 
 		// name text field
 		nameInput = new JTextField(state.getName());
-		nameInput.setFont(new Font("Monospaced", Font.PLAIN, 14));
+		nameInput.setFont(new Font("Monospaced", Font.PLAIN, Math.round(fontSize)));
 		gbc_nameInput.gridx++;
 		gbc_nameInput.gridwidth = 2;
 		gbc_nameInput.fill = GridBagConstraints.HORIZONTAL;
@@ -419,7 +431,7 @@ public class StateWindow extends JDialog {
 
 			// make text field for input
 			inputField = new JTextField(transition.getInput());
-			inputField.setFont(new Font("Monospaced", Font.PLAIN, 14));
+			inputField.setFont(new Font("Monospaced", Font.PLAIN, Math.round(fontSize)));
 			inputField.setColumns(2);
 			
 			// when changed, update transition's input if valid
