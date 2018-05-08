@@ -1,6 +1,8 @@
 package graphics;
 
+import java.awt.Dialog;
 import java.awt.Dimension;
+import java.awt.Font;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -35,11 +37,16 @@ import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.plaf.FontUIResource;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -52,11 +59,19 @@ public class MainWindow extends JFrame {
 	private Automaton machine;                      // the automaton
 	private StateGraphicsManager graphicManager;    // the graphical manager
 	
+	// data
+	private float fontSize = 12;
+	private String machineType = "DFA";             // default is DFA
+	private String machineStatus = Automaton.READY; // default is Ready
+	
 	// graphical objects for future access
+	private JMenuBar menuBar;                       // entire menu bar
+	private JMenu menuFile;                         // File menu
+	private JMenu menuEdit;                         // Edit menu
+	private ArrayList<JButton> buttons;             // list of buttons
+	private JLabel lblInput;                        // label that says Input:
 	private JLabel lblType;                         // label for machine type
-	private String machineType = "DFA";             //   (default is DFA)
 	private JLabel lblStatus;                       // label for machine status
-	private String machineStatus = Automaton.READY; //   (default is Ready)
 	private JLabel lblCurrentInput;                 // label for input char
 	private JTextArea inputText;                    // text area for input
 
@@ -85,6 +100,7 @@ public class MainWindow extends JFrame {
 		add(splitPane);
 		
 		// make option menus, buttons
+		buttons = new ArrayList<JButton>();
 		initMenuBar();
 		initSideBar(splitPane);       // lefthand side of splitPanel
 		
@@ -102,10 +118,10 @@ public class MainWindow extends JFrame {
 
 	private void initMenuBar() {
 		
-		// MENU BAR
-		JMenuBar menuBar = new JMenuBar();
-		JMenu menuFile = new JMenu("File");
-		JMenu menuEdit = new JMenu("Edit");
+		// MENU BAR //
+		menuBar = new JMenuBar();
+		menuFile = new JMenu("File");
+		menuEdit = new JMenu("Edit");
 		menuBar.add(menuFile);
 		menuBar.add(menuEdit);
 		setJMenuBar(menuBar);
@@ -118,6 +134,7 @@ public class MainWindow extends JFrame {
 			public void actionPerformed(ActionEvent ae) {
 				MainWindow newFrame = new MainWindow();
 				newFrame.addAutomaton(new Automaton());
+				newFrame.setFontSize(fontSize);
 			}			
 		});
 		menuFile.add(menuItemNew);
@@ -230,6 +247,16 @@ public class MainWindow extends JFrame {
 			}			
 		});
 		menuEdit.add(menuItemRefresh);
+		
+		// Set Font Size
+		final JMenuItem menuItemFontSize = new JMenuItem(new AbstractAction("Set Font Size") {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+				new FontSizeDialog(fontSize);
+				update();    // update states, labels, text
+			}			
+		});
+		menuEdit.add(menuItemFontSize);
 	}
 	
 	private void initSideBar(JSplitPane splitPane) {
@@ -251,7 +278,9 @@ public class MainWindow extends JFrame {
 		
 		// init step buttons here so other buttons can reference them
 		final JButton btnStepBack = new JButton("Step");
-		final JButton btnStepForward = new JButton("Step");;
+		final JButton btnStepForward = new JButton("Step");
+		buttons.add(btnStepBack);
+		buttons.add(btnStepForward);
 		
 		// run button
 		final JButton btnRun = new JButton(new AbstractAction("Run") {
@@ -270,6 +299,7 @@ public class MainWindow extends JFrame {
 			}
 		});
 		sidebar.add(btnRun, gbc_sidebar);
+		buttons.add(btnRun);
 		
 		// reset button
 		final JButton btnReset = new JButton(new AbstractAction("Reset") {
@@ -289,6 +319,7 @@ public class MainWindow extends JFrame {
 		});
 		gbc_sidebar.gridx++;
 		sidebar.add(btnReset, gbc_sidebar);
+		buttons.add(btnReset);
 		
 		// step back button:
 		// add arrow icon (Hamilton Continental blue)
@@ -374,7 +405,7 @@ public class MainWindow extends JFrame {
 		sidebar.add(btnStepForward, gbc_sidebar);
 		
 		// input label
-		final JLabel lblInput = new JLabel("Input:");
+		lblInput = new JLabel("Input:");
 		gbc_sidebar.insets = new Insets(5, 5, 0, 5);  // T, L, B, R
 		gbc_sidebar.anchor = GridBagConstraints.SOUTH;
 		gbc_sidebar.gridx = 0;
@@ -401,10 +432,7 @@ public class MainWindow extends JFrame {
 		
 		// status label
 		lblStatus = new JLabel("Status: " + machineStatus); // default: ready
-		gbc_sidebar.insets = new Insets(5, 5, 5, 5);
 		gbc_sidebar.gridy++;
-		gbc_sidebar.weighty = 0;
-		gbc_sidebar.fill = GridBagConstraints.NONE;
 		sidebar.add(lblStatus, gbc_sidebar);
 		
 		// automaton type label
@@ -438,6 +466,41 @@ public class MainWindow extends JFrame {
 			machineStatus = machine.getStatus();
 			lblStatus.setText("Status: " + machineStatus);
 		}
+	}
+	
+	public float getFontSize() {
+		return fontSize;
+	}
+	
+	private void setFontSize(float newFontSize) {
+		
+		fontSize = newFontSize;
+		
+		// update menu bar
+		Font newFont = new FontUIResource(menuBar.getFont().getFontName(), 
+				menuBar.getFont().getStyle(), Math.round(fontSize));
+		UIManager.put("Menu.font", newFont);
+		SwingUtilities.updateComponentTreeUI(this);
+		
+		// update menu items
+		for (int i = 0; i < menuFile.getItemCount(); i++) {
+			JMenuItem item = menuFile.getItem(i);
+			item.setFont(item.getFont().deriveFont(fontSize));
+		}
+		for (int i = 0; i < menuEdit.getItemCount(); i++) {
+			JMenuItem item = menuEdit.getItem(i);
+			item.setFont(item.getFont().deriveFont(fontSize));
+		}
+		
+		// update sidebar labels
+		lblInput.setFont(lblInput.getFont().deriveFont(fontSize));
+		lblCurrentInput.setFont(lblCurrentInput.getFont().deriveFont(fontSize));
+		lblType.setFont(lblType.getFont().deriveFont(fontSize));
+		lblStatus.setFont(lblStatus.getFont().deriveFont(fontSize));
+		
+		// update sidebar buttons
+		for (JButton b : buttons)
+			b.setFont(b.getFont().deriveFont(fontSize));
 	}
 	
 	private void reportException(Exception e) {
@@ -601,5 +664,77 @@ public class MainWindow extends JFrame {
 		editorPane.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 		helpWindow.add(new JScrollPane(editorPane));
 		helpWindow.setVisible(true);
+	}
+	
+	class FontSizeDialog extends JDialog {
+
+		private JTextField fontInput;
+
+		public FontSizeDialog(float fontSize) {
+
+			// set basic settings
+			setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			setBounds(100, 100, 200, 150);
+			setLayout(new GridBagLayout());
+			
+			// text input label
+			GridBagConstraints gbc_fontInput = new GridBagConstraints();
+			gbc_fontInput.anchor = GridBagConstraints.CENTER;
+			gbc_fontInput.insets = new Insets(5, 5, 5, 5);
+			gbc_fontInput.gridx = 0;
+			gbc_fontInput.gridy = 0;
+			add(new JLabel("Font size: "), gbc_fontInput);
+
+			// text input field
+			String fontText = Integer.toString(Math.round(fontSize));
+			fontInput = new JTextField(fontText);
+			fontInput.setFont(new Font("Monospaced", Font.PLAIN, 14));
+			gbc_fontInput.gridx++;
+			gbc_fontInput.gridwidth = 2;
+			gbc_fontInput.fill = GridBagConstraints.HORIZONTAL;
+			add(fontInput, gbc_fontInput);
+			
+			// cancel button
+			JButton btnCancel = new JButton(new AbstractAction("Cancel") {
+				@Override
+				public void actionPerformed(ActionEvent ae) {
+					cleanUp(false);
+				}
+			});
+			gbc_fontInput.gridx = 0;
+			gbc_fontInput.gridy++;
+			add(btnCancel, gbc_fontInput);
+
+			// save button
+			JButton btnSave = new JButton(new AbstractAction("Save") {
+				@Override
+				public void actionPerformed(ActionEvent ae) {
+					cleanUp(true);
+				}
+			});
+			gbc_fontInput.gridx++;
+			add(btnSave, gbc_fontInput);
+
+			// finish setup
+			setModalityType(Dialog.ModalityType.DOCUMENT_MODAL); // hog focus
+			setVisible(true);	
+		}
+		
+		private void cleanUp(boolean saving) {
+
+			// update font size
+			if (saving) {
+				try {
+					float newFontSize = Float.parseFloat(fontInput.getText());
+					setFontSize(newFontSize);
+				} catch (Exception e) {
+					reportException(new FileError("Invalid font size. Must enter a number."));
+				}
+			}
+			
+			// close dialog window
+			setVisible(false);
+			dispose();
+		}
 	}
 }

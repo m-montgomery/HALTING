@@ -72,6 +72,7 @@ public class StateGraphicsManager extends JPanel {
 	protected void paintComponent(Graphics g) {
 
 		super.paintComponent(g);
+		g.setFont(g.getFont().deriveFont(mainWindow.getFontSize()));
 
 		// draw each state circle
 		for (StateGraphic state : stateGraphics)
