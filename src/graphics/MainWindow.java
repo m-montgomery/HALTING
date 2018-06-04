@@ -75,6 +75,7 @@ public class MainWindow extends JFrame {
 	static final String VERIFY_STRING = "HALTING Automaton Save File";
 	static final String userManualFilename = "/resources/UserManual.html";
 	static final String iconFilename = "/resources/h.png";
+	static final String preferencesFilename = "haltingPreferences.txt";
 	
 	
 	public MainWindow() {
@@ -104,9 +105,10 @@ public class MainWindow extends JFrame {
 		JScrollPane rightComponent = new JScrollPane(graphicManager);
 		splitPane.setRightComponent(rightComponent);
 		
-		// set default machine
+		// set defaults
 		addAutomaton(new Automaton());
-
+		loadPreferences();
+		
 		setVisible(true);
 	}
 
@@ -251,6 +253,73 @@ public class MainWindow extends JFrame {
 			}			
 		});
 		menuEdit.add(menuItemFontSize);
+		
+		// Preferences
+		final JMenuItem menuItemPreferences = new JMenuItem(new AbstractAction("Preferences") {
+			@Override
+			public void actionPerformed(ActionEvent ae) {
+			    	
+				// MM: TO DO: open preferences window, allow editing
+			}
+		});
+		menuEdit.add(menuItemPreferences);
+	}
+	
+	private File initPreferences(String filename) throws IOException {
+		BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
+		writer.write(Float.toString(fontSize));
+		writer.close();
+		
+		return new File(filename);
+	}
+	
+	private void loadPreferences() {
+		
+		// get user home directory
+		String userHome = System.getProperty("user.home");
+	    if (userHome == null) {
+	        throw new IllegalStateException("user.home==null");
+            // MM: TO DO: report error ^
+	    }
+	    
+	    // create app directory if needed
+	    File settingsDirectory = new File(new File(userHome), ".halting");
+	    if (! settingsDirectory.exists()) {
+	        if (! settingsDirectory.mkdir()) {
+	            throw new IllegalStateException(settingsDirectory.toString());
+	            // MM: TO DO: report error ^
+	        }
+	    }
+	    
+	    // get user preferences file
+	    File preferencesFile = new File(settingsDirectory.toString() + "/" + preferencesFilename);
+	    if (! preferencesFile.exists()) {
+	    	try {
+				preferencesFile = initPreferences(settingsDirectory.toString() + "/" + preferencesFilename);
+			} catch (IOException e) {
+				reportException(new FileError("Unable to load preferences file."));
+				return;
+			}
+	    }
+	    
+	    // read user preferences file
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(preferencesFile));
+			ArrayList<String> lines = new ArrayList<String>();
+			
+			// read all lines into list
+			String line;
+			while ((line = reader.readLine()) != null)
+				lines.add(line);
+			reader.close();
+
+			setFontSize(Float.parseFloat(lines.get(0)));
+			
+		} catch (FileNotFoundException e) {
+			reportException(new FileError("Unable to locate preferences file."));
+		} catch (IOException e) {
+			reportException(new FileError("Unable to load preferences file."));
+		}
 	}
 	
 	private void initSideBar(JSplitPane splitPane) {
