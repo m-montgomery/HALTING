@@ -21,16 +21,23 @@ import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import javax.swing.JSplitPane;
 import javax.swing.AbstractAction;
@@ -59,9 +66,11 @@ public class MainWindow extends JFrame {
 	private StateGraphicsManager graphicManager;    // the graphical manager
 	
 	// properties
-	private float fontSize = 12;
-	private String machineType = "DFA";
-	private String machineStatus = Automaton.READY;
+	private Properties properties;
+	private float fontSize;
+	private String machineType;
+	private String machineStatus;
+	static String preferencesFilename = "/config.properties";
 	
 	// graphical objects for future access
 	private JLabel lblInput;                        // label that says Input:
@@ -75,7 +84,6 @@ public class MainWindow extends JFrame {
 	static final String VERIFY_STRING = "HALTING Automaton Save File";
 	static final String userManualFilename = "/resources/UserManual.html";
 	static final String iconFilename = "/resources/h.png";
-	static final String preferencesFilename = "haltingPreferences.txt";
 	
 	
 	public MainWindow() {
@@ -85,6 +93,14 @@ public class MainWindow extends JFrame {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 750, 400);
 		setLocationByPlatform(true);
+		
+		// clean up if closed
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosed(WindowEvent we) {
+				closingProcedures();
+			}
+		});
 		
 		// set icon
 		URL url = MainWindow.class.getResource(iconFilename);
@@ -105,11 +121,70 @@ public class MainWindow extends JFrame {
 		JScrollPane rightComponent = new JScrollPane(graphicManager);
 		splitPane.setRightComponent(rightComponent);
 		
-		// set defaults
+		// initialize automaton and properties
 		addAutomaton(new Automaton());
-		loadPreferences();
+		initProperties();
 		
 		setVisible(true);
+	}
+
+	private void closingProcedures() {
+		setVisible(false);
+		
+		// output user preferences to file
+		if (new File(preferencesFilename).exists()) {
+			try {
+				OutputStream output = new FileOutputStream(preferencesFilename);
+				properties.store(output, null);
+				output.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		dispose();
+	}
+	
+	private void initProperties() {
+		
+		properties = new Properties();
+
+		// get user home directory
+		String userHome = System.getProperty("user.home");
+		if (userHome == null)
+			throw new IllegalStateException("user.home==null");
+			// MM: TO DO: report error ^
+
+		// create app directory if needed
+		File settingsDirectory = new File(new File(userHome), ".halting");
+		if (! settingsDirectory.exists() && ! settingsDirectory.mkdir())
+			throw new IllegalStateException(settingsDirectory.toString());
+			// MM: TO DO: report error ^
+		
+		// determine preferences filenames
+		preferencesFilename = settingsDirectory.toString() + "/" +
+				preferencesFilename;
+		String defaultPreferences = MainWindow.class.getResource(
+				"/resources/config.properties").getPath();
+		
+		// load properties
+		try {
+			// use user's preferences if available, otherwise default
+			InputStream input = new File(preferencesFilename).exists() ?
+				new FileInputStream(preferencesFilename) :
+				new FileInputStream(defaultPreferences);
+			properties.load(input);
+			
+			// set program properties
+			setFontSize(Float.parseFloat(properties.getProperty("fontSize")));
+			machineType = properties.getProperty("machineType");
+			// MM: TO DO: update default automaton to match default machineType
+			
+			input.close();
+			
+		} catch (Exception e) {
+			reportException(new FileError("Unable to load program properties."));
+		}
 	}
 
 	private void initMenuBar() {
@@ -226,8 +301,7 @@ public class MainWindow extends JFrame {
 		final JMenuItem menuItemExit = new JMenuItem(new AbstractAction("Exit") {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
-				setVisible(false);
-				dispose();
+				closingProcedures();
 			}
 		});
 		menuFile.add(menuItemExit);
@@ -244,82 +318,15 @@ public class MainWindow extends JFrame {
 		});
 		menuEdit.add(menuItemRefresh);
 		
-		// Set Font Size
-		final JMenuItem menuItemFontSize = new JMenuItem(new AbstractAction("Set Font Size") {
-			@Override
-			public void actionPerformed(ActionEvent ae) {
-				new FontSizeDialog(fontSize);
-				update();    // update states, labels, text
-			}			
-		});
-		menuEdit.add(menuItemFontSize);
-		
 		// Preferences
 		final JMenuItem menuItemPreferences = new JMenuItem(new AbstractAction("Preferences") {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
-			    	
-				// MM: TO DO: open preferences window, allow editing
+				new PreferencesDialog();
+				update();    // update states, labels, text
 			}
 		});
 		menuEdit.add(menuItemPreferences);
-	}
-	
-	private File initPreferences(String filename) throws IOException {
-		BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
-		writer.write(Float.toString(fontSize));
-		writer.close();
-		
-		return new File(filename);
-	}
-	
-	private void loadPreferences() {
-		
-		// get user home directory
-		String userHome = System.getProperty("user.home");
-	    if (userHome == null) {
-	        throw new IllegalStateException("user.home==null");
-            // MM: TO DO: report error ^
-	    }
-	    
-	    // create app directory if needed
-	    File settingsDirectory = new File(new File(userHome), ".halting");
-	    if (! settingsDirectory.exists()) {
-	        if (! settingsDirectory.mkdir()) {
-	            throw new IllegalStateException(settingsDirectory.toString());
-	            // MM: TO DO: report error ^
-	        }
-	    }
-	    
-	    // get user preferences file
-	    File preferencesFile = new File(settingsDirectory.toString() + "/" + preferencesFilename);
-	    if (! preferencesFile.exists()) {
-	    	try {
-				preferencesFile = initPreferences(settingsDirectory.toString() + "/" + preferencesFilename);
-			} catch (IOException e) {
-				reportException(new FileError("Unable to load preferences file."));
-				return;
-			}
-	    }
-	    
-	    // read user preferences file
-		try {
-			BufferedReader reader = new BufferedReader(new FileReader(preferencesFile));
-			ArrayList<String> lines = new ArrayList<String>();
-			
-			// read all lines into list
-			String line;
-			while ((line = reader.readLine()) != null)
-				lines.add(line);
-			reader.close();
-
-			setFontSize(Float.parseFloat(lines.get(0)));
-			
-		} catch (FileNotFoundException e) {
-			reportException(new FileError("Unable to locate preferences file."));
-		} catch (IOException e) {
-			reportException(new FileError("Unable to load preferences file."));
-		}
 	}
 	
 	private void initSideBar(JSplitPane splitPane) {
@@ -543,6 +550,8 @@ public class MainWindow extends JFrame {
 		UIManager.put("OptionPane.font", UIManager.getFont("OptionPane.font").deriveFont(fontSize));
 		
 		SwingUtilities.updateComponentTreeUI(this);
+		
+		properties.setProperty("fontSize", Float.toString(newFontSize));
 	}
 	
 	private void reportException(Exception e) {
@@ -709,34 +718,49 @@ public class MainWindow extends JFrame {
 		helpWindow.setVisible(true);
 	}
 	
-	class FontSizeDialog extends JDialog {
+	class PreferencesDialog extends JDialog {
 
 		private JTextField fontInput;
+		private JTextField machineTypeInput;
 
-		public FontSizeDialog(float fontSize) {
+		public PreferencesDialog() {
 
 			// set basic settings
 			setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-			setBounds(100, 100, 200, 150);
+			setBounds(100, 100, 250, 400);
 			setLayout(new GridBagLayout());
-			
-			// text input label
-			GridBagConstraints gbc_fontInput = new GridBagConstraints();
-			gbc_fontInput.anchor = GridBagConstraints.CENTER;
-			gbc_fontInput.insets = new Insets(5, 5, 5, 5);
-			gbc_fontInput.gridx = 0;
-			gbc_fontInput.gridy = 0;
-			add(new JLabel("Font size: "), gbc_fontInput);
 
-			// text input field
+			// label constraints
+			GridBagConstraints gbc_label = new GridBagConstraints();
+			gbc_label.anchor = GridBagConstraints.WEST;
+			gbc_label.insets = new Insets(5, 5, 5, 5);
+			gbc_label.gridx = 0;
+			gbc_label.gridy = 0;
+
+			// input field constraints
+			GridBagConstraints gbc_field = new GridBagConstraints();
+			gbc_field.anchor = GridBagConstraints.CENTER;
+			gbc_field.insets = new Insets(5, 5, 5, 5);
+			gbc_field.gridx = 1;
+			gbc_field.gridy = 0;
+			gbc_field.gridwidth = 2;
+			gbc_field.fill = GridBagConstraints.HORIZONTAL;
+			
+			// property: font size
+			add(new JLabel("Font size: "), gbc_label);
 			String fontText = Integer.toString(Math.round(fontSize));
 			fontInput = new JTextField(fontText);
-			fontInput.setFont(new Font("Monospaced", Font.PLAIN, 14));
-			gbc_fontInput.gridx++;
-			gbc_fontInput.gridwidth = 2;
-			gbc_fontInput.fill = GridBagConstraints.HORIZONTAL;
-			add(fontInput, gbc_fontInput);
+			fontInput.setFont(new Font("Monospaced", Font.PLAIN, Math.round(fontSize)));
+			add(fontInput, gbc_field);
 			
+			// property: machine type
+			gbc_label.gridy++;
+			add(new JLabel("Default machine type: "), gbc_label);
+			machineTypeInput = new JTextField(machineType);
+			machineTypeInput.setFont(new Font("Monospaced", Font.PLAIN, Math.round(fontSize)));
+			gbc_field.gridy++;
+			add(machineTypeInput, gbc_field);
+
 			// cancel button
 			JButton btnCancel = new JButton(new AbstractAction("Cancel") {
 				@Override
@@ -744,9 +768,8 @@ public class MainWindow extends JFrame {
 					cleanUp(false);
 				}
 			});
-			gbc_fontInput.gridx = 0;
-			gbc_fontInput.gridy++;
-			add(btnCancel, gbc_fontInput);
+			gbc_label.gridy++;
+			add(btnCancel, gbc_label);
 
 			// save button
 			JButton btnSave = new JButton(new AbstractAction("Save") {
@@ -755,17 +778,17 @@ public class MainWindow extends JFrame {
 					cleanUp(true);
 				}
 			});
-			gbc_fontInput.gridx++;
-			add(btnSave, gbc_fontInput);
+			gbc_field.gridy++;
+			add(btnSave, gbc_field);
 
 			// finish setup
 			setModalityType(Dialog.ModalityType.DOCUMENT_MODAL); // hog focus
 			setVisible(true);	
 		}
-		
+
 		private void cleanUp(boolean saving) {
 
-			// update font size
+			// update properties
 			if (saving) {
 				try {
 					float newFontSize = Float.parseFloat(fontInput.getText());
@@ -773,8 +796,19 @@ public class MainWindow extends JFrame {
 				} catch (Exception e) {
 					reportException(new FileError("Invalid font size. Must enter a number."));
 				}
+				
+				try {
+					File userFile = new File(preferencesFilename); 
+					if (! userFile.exists())
+						userFile.createNewFile();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+				machineType = machineTypeInput.getText();
+				properties.setProperty("machineType", machineType);
 			}
-			
+
 			// close dialog window
 			setVisible(false);
 			dispose();
