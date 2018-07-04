@@ -100,6 +100,7 @@ public class StateWindow extends JDialog {
 		initButtons();       // save and cancel buttons
 		
 		setModalityType(Dialog.ModalityType.DOCUMENT_MODAL); // hog focus
+		//pack();          // MM: TO DO: try this but with minimum size set for transitions area
 		setVisible(true);	
 	}
 	

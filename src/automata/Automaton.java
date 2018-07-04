@@ -115,6 +115,7 @@ public class Automaton {
 	}
 	public void setType(String newType) {
 		type = newType;
+		// MM: TO DO: make necessary changes when switching from one type to another
 	}
 
 	public String getStatus() {
@@ -263,7 +264,7 @@ public class Automaton {
 	public void removeState(State state) {
 		
 		// clear start state if needed
-		if (state.getID() == startState.getID())
+		if (startState != null && state.getID() == startState.getID())
 			startState = null;
 		
 		// check every state

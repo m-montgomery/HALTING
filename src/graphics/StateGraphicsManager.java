@@ -417,6 +417,7 @@ public class StateGraphicsManager extends JPanel {
 				}
 			});
 			add(edit);
+			edit.setFont(edit.getFont().deriveFont(mainWindow.getFontSize()));
 
 			// delete state
 			delete = new JMenuItem(new AbstractAction("Delete") {
@@ -438,6 +439,7 @@ public class StateGraphicsManager extends JPanel {
 				}
 			});
 			add(delete);
+			delete.setFont(delete.getFont().deriveFont(mainWindow.getFontSize()));
 		}
 	}
 }

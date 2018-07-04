@@ -1,8 +1,8 @@
 package graphics;
 
+import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.Dimension;
-import java.awt.Font;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -50,8 +50,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -78,13 +76,14 @@ public class MainWindow extends JFrame {
 	private JLabel lblStatus;                       // label for machine status
 	private JLabel lblCurrentInput;                 // label for input char
 	private JTextArea inputText;                    // text area for input
+	private ArrayList<Component> components;        // all (for style editing)
 
 	// storage information
 	static final String EXT = "hlt";                // file extension
 	static final String VERIFY_STRING = "HALTING Automaton Save File";
 	static final String userManualFilename = "/resources/UserManual.html";
 	static final String iconFilename = "/resources/h.png";
-	
+ 
 	
 	public MainWindow() {
 		
@@ -112,6 +111,7 @@ public class MainWindow extends JFrame {
 		add(splitPane);
 		
 		// make option menus, buttons
+		components = new ArrayList<Component>();
 		initMenuBar();
 		initSideBar(splitPane);       // lefthand side of splitPanel
 		
@@ -151,15 +151,20 @@ public class MainWindow extends JFrame {
 
 		// get user home directory
 		String userHome = System.getProperty("user.home");
-		if (userHome == null)
-			throw new IllegalStateException("user.home==null");
-			// MM: TO DO: report error ^
+		if (userHome == null) {
+			reportException(new FileError("Cannot find user home directory; " +
+		                                  "unable to load preferences."));
+			return;
+		}
 
 		// create app directory if needed
 		File settingsDirectory = new File(new File(userHome), ".halting");
-		if (! settingsDirectory.exists() && ! settingsDirectory.mkdir())
-			throw new IllegalStateException(settingsDirectory.toString());
-			// MM: TO DO: report error ^
+		if (! settingsDirectory.exists() && ! settingsDirectory.mkdir()) {
+			reportException(new FileError("Cannot create program folder at " +
+					settingsDirectory.toString() + 
+                    "; unable to load preferences."));
+			return;
+		}
 		
 		// determine preferences filenames
 		preferencesFilename = settingsDirectory.toString() + "/" +
@@ -177,8 +182,7 @@ public class MainWindow extends JFrame {
 			
 			// set program properties
 			setFontSize(Float.parseFloat(properties.getProperty("fontSize")));
-			machineType = properties.getProperty("machineType");
-			// MM: TO DO: update default automaton to match default machineType
+			machine.setType(properties.getProperty("machineType"));
 			
 			input.close();
 			
@@ -190,7 +194,7 @@ public class MainWindow extends JFrame {
 	private void initMenuBar() {
 		
 		// MENU BAR //
-		JMenuBar menuBar = new JMenuBar();
+		JMenuBar menuBar = new JMenuBar(); 
 		JMenu menuFile = new JMenu("File");
 		JMenu menuEdit = new JMenu("Edit");
 		menuBar.add(menuFile);
@@ -204,7 +208,6 @@ public class MainWindow extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
 				MainWindow newFrame = new MainWindow();
-				newFrame.addAutomaton(new Automaton());
 				newFrame.setFontSize(fontSize);
 			}			
 		});
@@ -305,7 +308,12 @@ public class MainWindow extends JFrame {
 			}
 		});
 		menuFile.add(menuItemExit);
-	
+		
+		// save to components
+		components.add(menuFile);
+		for (Component item : menuFile.getMenuComponents())
+			components.add(item);
+		
 		
 		// EDIT MENU //
 		
@@ -327,6 +335,11 @@ public class MainWindow extends JFrame {
 			}
 		});
 		menuEdit.add(menuItemPreferences);
+		
+		// save to components
+		components.add(menuEdit);
+		for (Component item : menuEdit.getMenuComponents())
+			components.add(item);
 	}
 	
 	private void initSideBar(JSplitPane splitPane) {
@@ -367,6 +380,7 @@ public class MainWindow extends JFrame {
 			}
 		});
 		sidebar.add(btnRun, gbc_sidebar);
+		components.add(btnRun);
 		
 		// reset button
 		final JButton btnReset = new JButton(new AbstractAction("Reset") {
@@ -386,6 +400,7 @@ public class MainWindow extends JFrame {
 		});
 		gbc_sidebar.gridx++;
 		sidebar.add(btnReset, gbc_sidebar);
+		components.add(btnReset);
 		
 		// step back button:
 		// add arrow icon (Hamilton Continental blue)
@@ -420,6 +435,7 @@ public class MainWindow extends JFrame {
 		gbc_sidebar.gridx = 0;
 		gbc_sidebar.gridy++;
 		sidebar.add(btnStepBack, gbc_sidebar);
+		components.add(btnStepBack);
 		
 		// step forward button:
 		// add arrow icon (Hamilton Continental blue)
@@ -469,6 +485,7 @@ public class MainWindow extends JFrame {
 		});
 		gbc_sidebar.gridx++;
 		sidebar.add(btnStepForward, gbc_sidebar);
+		components.add(btnStepForward);
 		
 		// input label
 		lblInput = new JLabel("Input:");
@@ -478,7 +495,8 @@ public class MainWindow extends JFrame {
 		gbc_sidebar.gridy++;
 		gbc_sidebar.gridwidth = 2;          // fill entire row
 		sidebar.add(lblInput, gbc_sidebar);
-
+		components.add(lblInput);
+		
 		// input text field (scrollable)
 		inputText = new JTextArea();
 		JScrollPane areaScrollPane = new JScrollPane(inputText);
@@ -487,6 +505,7 @@ public class MainWindow extends JFrame {
 		gbc_sidebar.weighty = 1.0;
 		gbc_sidebar.fill = GridBagConstraints.BOTH;
 		sidebar.add(areaScrollPane, gbc_sidebar);
+		components.add(inputText);
 		
 		// current input label
 		lblCurrentInput = new JLabel(" ");
@@ -495,16 +514,19 @@ public class MainWindow extends JFrame {
 		gbc_sidebar.weighty = 0;
 		gbc_sidebar.fill = GridBagConstraints.NONE;
 		sidebar.add(lblCurrentInput, gbc_sidebar);
+		components.add(lblCurrentInput);
 		
 		// status label
 		lblStatus = new JLabel("Status: " + machineStatus); // default: ready
 		gbc_sidebar.gridy++;
 		sidebar.add(lblStatus, gbc_sidebar);
+		components.add(lblStatus);
 		
 		// automaton type label
 		lblType = new JLabel("Type: " + machineType);       // default: DFA
 		gbc_sidebar.gridy++;
 		sidebar.add(lblType, gbc_sidebar);
+		components.add(lblType);
 	}
 
 	private void addAutomaton(Automaton auto) {
@@ -539,19 +561,17 @@ public class MainWindow extends JFrame {
 	}
 	
 	private void setFontSize(float newFontSize) {
-		
+
+		// save new font size
 		fontSize = newFontSize;
-		
-		UIManager.put("Menu.font", UIManager.getFont("Menu.font").deriveFont(fontSize));
-		UIManager.put("Label.font", UIManager.getFont("Label.font").deriveFont(fontSize));
-		UIManager.put("Button.font", UIManager.getFont("Button.font").deriveFont(fontSize));
-		UIManager.put("TextArea.font", UIManager.getFont("TextArea.font").deriveFont(fontSize));
-		UIManager.put("MenuItem.font", UIManager.getFont("MenuItem.font").deriveFont(fontSize));
-		UIManager.put("OptionPane.font", UIManager.getFont("OptionPane.font").deriveFont(fontSize));
-		
-		SwingUtilities.updateComponentTreeUI(this);
-		
 		properties.setProperty("fontSize", Float.toString(newFontSize));
+
+		// update all text-based components
+		for (Component c : components)
+			c.setFont(c.getFont().deriveFont(newFontSize));
+		
+		// update machine graphics
+		update();  
 	}
 	
 	private void reportException(Exception e) {
@@ -746,21 +766,25 @@ public class MainWindow extends JFrame {
 			gbc_field.gridwidth = 2;
 			gbc_field.fill = GridBagConstraints.HORIZONTAL;
 			
-			// property: font size
-			add(new JLabel("Font size: "), gbc_label);
+			// property: font size (label)
+			JLabel fontLabel = new JLabel("Font size: "); 
+			add(fontLabel, gbc_label);
+			
+			// property: font size (input field)
 			String fontText = Integer.toString(Math.round(fontSize));
 			fontInput = new JTextField(fontText);
-			fontInput.setFont(new Font("Monospaced", Font.PLAIN, Math.round(fontSize)));
 			add(fontInput, gbc_field);
 			
-			// property: machine type
+			// property: machine type (label)
 			gbc_label.gridy++;
-			add(new JLabel("Default machine type: "), gbc_label);
+			JLabel machineTypeLabel = new JLabel("Default machine type: ");
+			add(machineTypeLabel, gbc_label);
+			
+			// property: machine type (input field)
 			machineTypeInput = new JTextField(machineType);
-			machineTypeInput.setFont(new Font("Monospaced", Font.PLAIN, Math.round(fontSize)));
 			gbc_field.gridy++;
 			add(machineTypeInput, gbc_field);
-
+			
 			// cancel button
 			JButton btnCancel = new JButton(new AbstractAction("Cancel") {
 				@Override
@@ -769,6 +793,7 @@ public class MainWindow extends JFrame {
 				}
 			});
 			gbc_label.gridy++;
+			btnCancel.setFont(btnCancel.getFont().deriveFont(fontSize));
 			add(btnCancel, gbc_label);
 
 			// save button
@@ -779,9 +804,15 @@ public class MainWindow extends JFrame {
 				}
 			});
 			gbc_field.gridy++;
+			btnSave.setFont(btnSave.getFont().deriveFont(fontSize));
 			add(btnSave, gbc_field);
 
+			// set font sizes
+			for (Component c : getContentPane().getComponents())
+				c.setFont(c.getFont().deriveFont(fontSize));
+
 			// finish setup
+			pack();
 			setModalityType(Dialog.ModalityType.DOCUMENT_MODAL); // hog focus
 			setVisible(true);	
 		}
