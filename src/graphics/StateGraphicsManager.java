@@ -30,6 +30,8 @@ public class StateGraphicsManager extends JPanel {
 	private Automaton machine;
 	private StateGraphic currentState;
 	private MouseListener mouseListener;
+	
+	private boolean warnBeforeDeleting;
 
 	public StateGraphicsManager(MainWindow win) {
 		stateGraphics = new ArrayList<StateGraphic>();
@@ -424,13 +426,15 @@ public class StateGraphicsManager extends JPanel {
 				@Override
 				public void actionPerformed(ActionEvent ae) {
 
-					// ask user to confirm deletion
-					int response = JOptionPane.showConfirmDialog(null, 
+					// ask user to confirm deletion (if desired)
+					int response = -1;
+					if (warnBeforeDeleting)
+						response = JOptionPane.showConfirmDialog(null, 
 							"Are you sure you want to delete state " + s.getName() + "?", 
 							"Warning", JOptionPane.YES_NO_OPTION);
 
 					// delete state if confirmed
-					if (response == JOptionPane.YES_OPTION) {
+					if (! warnBeforeDeleting || response == JOptionPane.YES_OPTION) {
 						stateGraphics.remove(s);            // state graphic
 						machine.removeState(s.getState());  // state
 						win.update();
@@ -441,5 +445,9 @@ public class StateGraphicsManager extends JPanel {
 			add(delete);
 			delete.setFont(delete.getFont().deriveFont(mainWindow.getFontSize()));
 		}
+	}
+
+	public void warn(Boolean beforeDeleting) {
+		warnBeforeDeleting = beforeDeleting;
 	}
 }

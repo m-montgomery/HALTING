@@ -6,6 +6,7 @@ import java.awt.Dimension;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 
 import automata.Automaton;
@@ -42,6 +43,7 @@ import java.util.Properties;
 import javax.swing.JSplitPane;
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -124,6 +126,7 @@ public class MainWindow extends JFrame {
 		// initialize automaton and properties
 		addAutomaton(new Automaton());
 		initProperties();
+		graphicManager.warn(Boolean.valueOf(properties.getProperty("warnBeforeDeleting")));
 		
 		setVisible(true);
 	}
@@ -742,6 +745,7 @@ public class MainWindow extends JFrame {
 
 		private JTextField fontInput;
 		private JTextField machineTypeInput;
+		private JRadioButton warnBeforeDeletingYes;
 
 		public PreferencesDialog() {
 
@@ -766,33 +770,69 @@ public class MainWindow extends JFrame {
 			gbc_field.gridwidth = 2;
 			gbc_field.fill = GridBagConstraints.HORIZONTAL;
 			
+			// button constraints
+			GridBagConstraints gbc_button = new GridBagConstraints();
+			gbc_button.anchor = GridBagConstraints.CENTER;
+			gbc_button.insets = new Insets(5, 5, 5, 5);
+			gbc_button.gridx = 1;
+			gbc_button.gridy = 0;
+			
+			
 			// property: font size (label)
 			JLabel fontLabel = new JLabel("Font size: "); 
 			add(fontLabel, gbc_label);
+			gbc_label.gridy++;
 			
 			// property: font size (input field)
 			String fontText = Integer.toString(Math.round(fontSize));
 			fontInput = new JTextField(fontText);
 			add(fontInput, gbc_field);
+			gbc_field.gridy++;
 			
 			// property: machine type (label)
-			gbc_label.gridy++;
 			JLabel machineTypeLabel = new JLabel("Default machine type: ");
 			add(machineTypeLabel, gbc_label);
+			gbc_label.gridy++;
 			
 			// property: machine type (input field)
 			machineTypeInput = new JTextField(machineType);
-			gbc_field.gridy++;
 			add(machineTypeInput, gbc_field);
+			gbc_field.gridy++;
+			
+			// property: warn before deleting a state (label)
+			JLabel warnBeforeDeletingLabel = new JLabel("Confirm before deleting a state: ");
+			add(warnBeforeDeletingLabel, gbc_label);
+			gbc_button.gridy = gbc_label.gridy;
+			gbc_label.gridy++;
+			
+			
+			// property: warn before deleting a state (radio button - yes)
+			ButtonGroup warnBeforeDeleteBtns = new ButtonGroup();
+			warnBeforeDeletingYes = new JRadioButton("Yes");
+			warnBeforeDeleteBtns.add(warnBeforeDeletingYes);
+			add(warnBeforeDeletingYes, gbc_button);
+			if (Boolean.valueOf(properties.getProperty("warnBeforeDeleting")))
+				warnBeforeDeletingYes.setSelected(true);
+			gbc_button.gridx++;
+			
+			// property: warn before deleting a state (radio button - no)
+			JRadioButton warnBeforeDeletingNo = new JRadioButton("No");
+			warnBeforeDeleteBtns.add(warnBeforeDeletingNo);
+			add(warnBeforeDeletingNo, gbc_button);
+			if (!Boolean.valueOf(properties.getProperty("warnBeforeDeleting")))
+				warnBeforeDeletingNo.setSelected(true);
+			gbc_button.gridx--;
+			
 			
 			// cancel button
+			gbc_label.anchor = GridBagConstraints.EAST;
+			gbc_label.gridx++;
 			JButton btnCancel = new JButton(new AbstractAction("Cancel") {
 				@Override
 				public void actionPerformed(ActionEvent ae) {
 					cleanUp(false);
 				}
 			});
-			gbc_label.gridy++;
 			btnCancel.setFont(btnCancel.getFont().deriveFont(fontSize));
 			add(btnCancel, gbc_label);
 
@@ -803,9 +843,9 @@ public class MainWindow extends JFrame {
 					cleanUp(true);
 				}
 			});
-			gbc_field.gridy++;
+			gbc_label.gridx++;
 			btnSave.setFont(btnSave.getFont().deriveFont(fontSize));
-			add(btnSave, gbc_field);
+			add(btnSave, gbc_label);
 
 			// set font sizes
 			for (Component c : getContentPane().getComponents())
@@ -838,6 +878,17 @@ public class MainWindow extends JFrame {
 				
 				machineType = machineTypeInput.getText();
 				properties.setProperty("machineType", machineType);
+				
+				if (warnBeforeDeletingYes.isSelected()) {
+					properties.setProperty("warnBeforeDeleting", "true");
+					graphicManager.warn(true);
+				}
+				else {
+					properties.setProperty("warnBeforeDeleting", "false");
+					graphicManager.warn(false);
+				}
+					
+					
 			}
 
 			// close dialog window
