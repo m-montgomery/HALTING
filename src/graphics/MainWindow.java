@@ -169,18 +169,17 @@ public class MainWindow extends JFrame {
 			return;
 		}
 		
-		// determine preferences filenames
+		// build user preferences filename
 		preferencesFilename = settingsDirectory.toString() + "/" +
 				preferencesFilename;
-		String defaultPreferences = MainWindow.class.getResource(
-				"/resources/config.properties").getPath();
 		
 		// load properties
 		try {
 			// use user's preferences if available, otherwise default
 			InputStream input = new File(preferencesFilename).exists() ?
-				new FileInputStream(preferencesFilename) :
-				new FileInputStream(defaultPreferences);
+					new FileInputStream(preferencesFilename) :
+					MainWindow.class.getResourceAsStream("/resources/config.properties");
+			
 			properties.load(input);
 			
 			// set program properties
